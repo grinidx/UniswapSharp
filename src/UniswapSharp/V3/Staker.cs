@@ -1,33 +1,59 @@
 using System.Numerics;
+using System.Text;
 using Nethereum.ABI;
-using Nethereum.Contracts;
 using Nethereum.Hex.HexConvertors.Extensions;
-using Nethereum.JsonRpc.Client;
-using Nethereum.RPC;
-using Nethereum.Util;
 using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
+using UniswapSharp.Core.Utils;
 using UniswapSharp.V3.Entities;
 using UniswapSharp.V3.Utils;
+using static UniswapSharp.V3.Utils.AbiFunctionEncoder;
 
 namespace UniswapSharp.V3;
 
 public abstract class Staker
 {
-    public static Contract Interface { get; }
-    private const string INCENTIVE_KEY_ABI = "tuple(address rewardToken, address pool, uint256 startTime, uint256 endTime, address refundee)";
+    // The IncentiveKey struct, all-static so it encodes as its concatenated fields.
+    private const string IncentiveKeyTuple = "(address,address,uint256,uint256,address)";
 
+    private static readonly ABIEncode Abi = new();
+
+    private static ABIValue[] IncentiveKeyValues(IncentiveKey key)
+    {
+        return new[]
+        {
+            new ABIValue("address", key.RewardToken.Address),
+            new ABIValue("address", Pool.GetAddress(key.Pool.Token0, key.Pool.Token1, key.Pool.Fee)),
+            new ABIValue("uint256", key.StartTime),
+            new ABIValue("uint256", key.EndTime),
+            new ABIValue("address", AddressValidator.ValidateAndParseAddress(key.Refundee)),
+        };
+    }
+
+    private static ABIValue[] IncentiveKeyWithTokenId(IncentiveKey key, BigInteger tokenId)
+    {
+        var vals = IncentiveKeyValues(key);
+        return new[] { vals[0], vals[1], vals[2], vals[3], vals[4], new ABIValue("uint256", tokenId) };
+    }
+
+    // To claim rewards, must unstake and then claim.
     private static string[] EncodeClaim(IncentiveKey incentiveKey, IClaimOptions options)
     {
-        var calldatas = new List<string>();
-        calldatas.Add(Interface.GetFunction("unstakeToken").GetData(EncodeIncentiveKey(incentiveKey), options.TokenId.ToHex(false)));
+        string recipient = AddressValidator.ValidateAndParseAddress(options.Recipient);
+        BigInteger amount = options.Amount ?? BigInteger.Zero;
 
-        var recipient = new AddressUtil().ConvertToChecksumAddress(options.Recipient);
-        var amount = options.Amount ?? BigInteger.Zero;
-        calldatas.Add(Interface.GetFunction("claimReward").GetData(incentiveKey.RewardToken.Address, recipient, amount.ToHex(false)));
-
-        return calldatas.ToArray();
+        return new[]
+        {
+            EncodeFunctionData($"unstakeToken({IncentiveKeyTuple},uint256)", IncentiveKeyWithTokenId(incentiveKey, options.TokenId)),
+            EncodeFunctionData("claimReward(address,address,uint256)",
+                new ABIValue("address", incentiveKey.RewardToken.Address),
+                new ABIValue("address", recipient),
+                new ABIValue("uint256", amount)),
+        };
     }
+
+    public static NonfungiblePositionManager.MethodParameters CollectRewards(IncentiveKey incentiveKey, IClaimOptions options) =>
+        CollectRewards(new[] { incentiveKey }, options);
 
     public static NonfungiblePositionManager.MethodParameters CollectRewards(IncentiveKey[] incentiveKeys, IClaimOptions options)
     {
@@ -36,15 +62,18 @@ public abstract class Staker
         foreach (var incentiveKey in incentiveKeys)
         {
             calldatas.AddRange(EncodeClaim(incentiveKey, options));
-            calldatas.Add(Interface.GetFunction("stakeToken").GetData(EncodeIncentiveKey(incentiveKey), options.TokenId.ToHex(false)));
+            calldatas.Add(EncodeFunctionData($"stakeToken({IncentiveKeyTuple},uint256)", IncentiveKeyWithTokenId(incentiveKey, options.TokenId)));
         }
 
         return new NonfungiblePositionManager.MethodParameters
         {
             Calldata = Multicall.EncodeMulticall(calldatas),
-            Value = BigInteger.Zero.ToHex(false)
+            Value = Utilities.ToHex(BigInteger.Zero)
         };
     }
+
+    public static NonfungiblePositionManager.MethodParameters WithdrawToken(IncentiveKey incentiveKey, FullWithdrawOptions withdrawOptions) =>
+        WithdrawToken(new[] { incentiveKey }, withdrawOptions);
 
     public static NonfungiblePositionManager.MethodParameters WithdrawToken(IncentiveKey[] incentiveKeys, FullWithdrawOptions withdrawOptions)
     {
@@ -62,44 +91,41 @@ public abstract class Staker
             calldatas.AddRange(EncodeClaim(incentiveKey, claimOptions));
         }
 
-        var owner = new AddressUtil().ConvertToChecksumAddress(withdrawOptions.Owner);
-        calldatas.Add(Interface.GetFunction("withdrawToken").GetData(
-            withdrawOptions.TokenId.ToHex(false),
-            owner,
-            string.IsNullOrEmpty(withdrawOptions.Data) ? BigInteger.Zero.ToHex(false) : withdrawOptions.Data
-        ));
+        string owner = AddressValidator.ValidateAndParseAddress(withdrawOptions.Owner);
+        byte[] data = string.IsNullOrEmpty(withdrawOptions.Data)
+            ? Utilities.ToHex(BigInteger.Zero).HexToByteArray()
+            : withdrawOptions.Data.HexToByteArray();
+
+        calldatas.Add(EncodeFunctionData("withdrawToken(uint256,address,bytes)",
+            new ABIValue("uint256", withdrawOptions.TokenId),
+            new ABIValue("address", owner),
+            new ABIValue("bytes", data)));
 
         return new NonfungiblePositionManager.MethodParameters
         {
             Calldata = Multicall.EncodeMulticall(calldatas),
-            Value = BigInteger.Zero.ToHex(false)
+            Value = Utilities.ToHex(BigInteger.Zero)
         };
     }
+
+    public static string EncodeDeposit(IncentiveKey incentiveKey) => EncodeDeposit(new[] { incentiveKey });
 
     public static string EncodeDeposit(IncentiveKey[] incentiveKeys)
     {
         if (incentiveKeys.Length > 1)
         {
-            var keys = incentiveKeys.Select(EncodeIncentiveKey).ToArray();
-            return new ABIEncode().GetABIEncoded(new ABIValue($"{INCENTIVE_KEY_ABI}[]", keys)).ToHex();
+            // ABI encoding of a dynamic array of static tuples: offset, length, then each tuple's fields.
+            var sb = new StringBuilder();
+            sb.Append(Abi.GetABIEncoded(new ABIValue("uint256", (BigInteger)32)).ToHex());
+            sb.Append(Abi.GetABIEncoded(new ABIValue("uint256", (BigInteger)incentiveKeys.Length)).ToHex());
+            foreach (var key in incentiveKeys)
+            {
+                sb.Append(Abi.GetABIEncoded(IncentiveKeyValues(key)).ToHex());
+            }
+            return "0x" + sb;
         }
-        else
-        {
-            return new ABIEncode().GetABIEncoded(new ABIValue(INCENTIVE_KEY_ABI, EncodeIncentiveKey(incentiveKeys[0]))).ToHex();
-        }
-    }
 
-    private static object EncodeIncentiveKey(IncentiveKey incentiveKey)
-    {
-        var refundee = new AddressUtil().ConvertToChecksumAddress(incentiveKey.Refundee);
-        return new
-        {
-            rewardToken = incentiveKey.RewardToken.Address,
-            pool = Pool.GetAddress(incentiveKey.Pool.Token0, incentiveKey.Pool.Token1, incentiveKey.Pool.Fee),
-            startTime = incentiveKey.StartTime.ToHex(false),
-            endTime = incentiveKey.EndTime.ToHex(false),
-            refundee
-        };
+        return "0x" + Abi.GetABIEncoded(IncentiveKeyValues(incentiveKeys[0])).ToHex();
     }
 
     public class FullWithdrawOptions : IClaimOptions, IWithdrawOptions
@@ -110,6 +136,7 @@ public abstract class Staker
         public string Owner { get; set; }
         public string Data { get; set; }
     }
+
     public class IncentiveKey
     {
         public Token RewardToken { get; set; }
@@ -132,7 +159,6 @@ public abstract class Staker
         public string Recipient { get; set; }
         public BigInteger? Amount { get; set; }
     }
-
 
     public interface IWithdrawOptions
     {
