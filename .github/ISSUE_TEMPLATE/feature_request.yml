@@ -1,0 +1,15 @@
+name: Feature request
+description: Suggest an addition or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+    validations:
+      required: true
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream reference (if applicable)
+      description: Link to the @uniswap/* module this relates to.
