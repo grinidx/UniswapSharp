@@ -5,6 +5,7 @@ namespace UniswapSharp.V3.Utils;
 public static class PositionLibrary
 {
     private static readonly BigInteger Q128 = BigInteger.Pow(2, 128);
+    private static readonly BigInteger Q256 = BigInteger.Pow(2, 256);
 
     // Replicates the portions of Position#update required to compute unaccounted fees
     public static (BigInteger, BigInteger) GetTokensOwed(
@@ -27,10 +28,11 @@ public static class PositionLibrary
         return (tokensOwed0, tokensOwed1);
     }
 
-    // Assuming SubIn256 is defined elsewhere in your C# codebase
+    // Ported from sdks/v3-sdk/src/utils/tickLibrary.ts (subIn256): 256-bit
+    // modular subtraction — if the difference underflows, wrap by +2^256.
     private static BigInteger SubIn256(BigInteger a, BigInteger b)
     {
-        // Implementation of SubIn256 should be provided
-        throw new NotImplementedException("SubIn256 method needs to be implemented");
+        var difference = a - b;
+        return difference < 0 ? Q256 + difference : difference;
     }
 }

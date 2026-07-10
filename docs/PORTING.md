@@ -54,7 +54,7 @@
 | `utils/maxLiquidityForAmounts.ts` | `Utils/MaxLiquidity.cs` | Indirect — exercised via `PositionTests.cs` | ported |
 | `utils/mostSignificantBit.ts` | `Utils/MostSignificantBitCalculator.cs` | Indirect — exercised via `TickMath` call sites | ported |
 | `utils/nearestUsableTick.ts` | `Utils/NearestUsableTick.cs` | No dedicated test file | ported |
-| `utils/position.ts` | `Utils/PositionLibrary.cs` (`GetTokensOwed`) | No | **partial** — its private `SubIn256` helper throws `NotImplementedException` (see outstanding stubs below) |
+| `utils/position.ts` | `Utils/PositionLibrary.cs` (`GetTokensOwed`) | Yes — `V3/Utils/PositionLibraryTests.cs` (incl. subIn256 wraparound) | ported |
 | `utils/priceTickConversions.ts` | `Utils/PriceTick.cs` | No | **stub** — `NotImplementedException` |
 | `utils/sqrtPriceMath.ts` | `Utils/SqrtPriceMath.cs` | Indirect — exercised via `PoolTests.cs`/`TradeTests.cs` | ported |
 | `utils/swapMath.ts` | `Utils/SwapMath.cs` | Indirect — exercised via `PoolTests.cs`/`TradeTests.cs` | ported |
@@ -74,7 +74,6 @@ math is only indirectly covered today and would benefit from dedicated `*Tests.c
 | `V3/SwapQuoter.cs` | `quoter.ts` (+ `quoter.test.ts`) |
 | `V3/NonfungiblePositionManager.cs` | `nonfungiblePositionManager.ts` |
 | `V3/Payments.cs` | `payments.ts` |
-| `V3/Utils/PositionLibrary.cs` (`SubIn256`) | `utils/tickLibrary.ts` (`subIn256`) |
 | `V3/Utils/PriceTick.cs` | `utils/priceTickConversions.ts` |
 
 ## 5. Porting workflow (test-first)
