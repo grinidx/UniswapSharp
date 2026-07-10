@@ -241,13 +241,6 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Cache NuGet
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
-          restore-keys: ${{ runner.os }}-nuget-
-
       - name: Restore
         run: dotnet restore
 
@@ -258,7 +251,6 @@ jobs:
         run: >
           dotnet test -c Release --no-build
           --logger "trx;LogFileName=test-results.trx"
-          --logger "GitHubActions"
           --results-directory ${{ github.workspace }}/TestResults
           --collect:"XPlat Code Coverage"
 

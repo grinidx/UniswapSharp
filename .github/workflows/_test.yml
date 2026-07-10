@@ -1,99 +1,79 @@
-name: Workflow Test
-
+name: Build & Test
 on:
   workflow_call:
-  workflow_dispatch:
-  push:
-    branches:
-      - dev
-      - main
-env:
-  DOTNET_VERSION: '10.0'
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-    name: Build & Test
-    runs-on: ubuntu-latest
+  build-test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     permissions:
-      pull-requests: write
       contents: read
-      issues: read
       checks: write
+      pull-requests: write
     steps:
-    - name: Checkout
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4
+        with:
+          dotnet-version: '10.0.x'
 
-    - name: Nuget Cache
-      uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
+      - name: Restore
+        run: dotnet restore
 
-    - name: Restore
-      run: dotnet restore
+      - name: Build
+        run: dotnet build -c Release --no-restore
 
-    - name: Build
-      run: dotnet build -c Release --no-restore
+      - name: Test
+        run: >
+          dotnet test -c Release --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory ${{ github.workspace }}/TestResults
+          --collect:"XPlat Code Coverage"
 
-    - name: Test
-      run: dotnet test -c Release --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+      # --- Reporting (single OS leg to avoid duplicate comments) ---
+      - name: Publish test results
+        if: always() && runner.os == 'Linux'
+        uses: EnricoMi/publish-unit-test-result-action@82082dac68ad6a19d980f8ce817e108b9f496c2a # v2.17.1
+        with:
+          check_name: "Test Results"
+          trx_files: "${{ github.workspace }}/TestResults/**/*.trx"
 
-    - name: Combine Coverage Reports
-      uses: danielpalme/ReportGenerator-GitHub-Action@e3af7259842d9c814021ea121f85526e0872b25f # v5.3.9
-      with:
-        reports: "**/*.cobertura.xml"
-        targetdir: "${{ github.workspace }}"
-        reporttypes: "Cobertura"
-        verbosity: "Info"
-        title: "Code Coverage"
-        tag: "${{ github.run_number }}_${{ github.run_id }}"
-        customSettings: ""
-        toolpath: "reportgeneratortool"
-        assemblyfilters: "-PinguApps.Appwrite.Shared.Tests"
+      - name: Coverage report
+        if: always() && runner.os == 'Linux'
+        uses: danielpalme/ReportGenerator-GitHub-Action@e3af7259842d9c814021ea121f85526e0872b25f # v5.3.9
+        with:
+          reports: "${{ github.workspace }}/TestResults/**/coverage.cobertura.xml"
+          targetdir: "${{ github.workspace }}/coveragereport"
+          reporttypes: "Cobertura;MarkdownSummaryGithub"
 
-    - name: Upload Combined Coverage XML
-      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
-      with:
-        name: coverage
-        path: ${{ github.workspace }}/Cobertura.xml
-        retention-days: 5
+      - name: Write coverage to job summary
+        if: always() && runner.os == 'Linux'
+        shell: bash
+        run: cat "${{ github.workspace }}/coveragereport/SummaryGithub.md" >> "$GITHUB_STEP_SUMMARY" || true
 
-    - name: Publish Code Coverage Report
-      uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95 # v1.3.0
-      with:
-        filename: "Cobertura.xml"
-        badge: true
-        fail_below_min: false
-        format: markdown
-        hide_branch_rate: false
-        hide_complexity: false
-        indicators: true
-        output: both
-        thresholds: "10 30"
+      - name: Coverage PR comment
+        if: always() && runner.os == 'Linux' && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2
+        with:
+          header: coverage
+          recreate: true
+          path: "${{ github.workspace }}/coveragereport/SummaryGithub.md"
 
-    - name: Add Coverage PR Comment
-      uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2
-      if: github.event_name == 'pull_request'
-      with:
-        recreate: true
-        path: code-coverage-results.md
-
-    - name: Upload Test Result Files
-      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
-      with:
-        name: test-results
-        path: ${{ github.workspace }}/**/TestResults/**/*
-        retention-days: 5
-
-    - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@82082dac68ad6a19d980f8ce817e108b9f496c2a # v2.17.1
-      if: always()
-      with:
-        trx_files: "${{ github.workspace }}/**/*.trx"
+      - name: Upload test artifacts
+        if: always() && runner.os == 'Linux'
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
+        with:
+          name: test-results
+          path: |
+            ${{ github.workspace }}/TestResults/**/*.trx
+            ${{ github.workspace }}/coveragereport/**
+          retention-days: 7
