@@ -39,7 +39,7 @@
 | `multicall.ts` | `Multicall.cs` | No dedicated test file | ported |
 | `nonfungiblePositionManager.ts` | `NonfungiblePositionManager.cs` | No | **stub** — `NotImplementedException` |
 | `payments.ts` | `Payments.cs` | Yes — `V3/PaymentsTests.cs` (5 cases) | ported |
-| `quoter.ts` | `SwapQuoter.cs` | No | **stub** — `NotImplementedException` |
+| `quoter.ts` | `SwapQuoter.cs` | Yes — `V3/SwapQuoterTests.cs` (7 cases, V1 + QuoterV2) | ported |
 | `selfPermit.ts` | `SelfPermit.cs` | No dedicated test file | ported |
 | `staker.ts` | `Staker.cs` | No dedicated test file | ported |
 | `swapRouter.ts` | `SwapRouter.cs` | No dedicated test file | ported |
@@ -71,7 +71,6 @@ math is only indirectly covered today and would benefit from dedicated `*Tests.c
 ### Outstanding stubs (Phase B)
 | C# file | Upstream reference |
 |---|---|
-| `V3/SwapQuoter.cs` | `quoter.ts` (+ `quoter.test.ts`) |
 | `V3/NonfungiblePositionManager.cs` | `nonfungiblePositionManager.ts` |
 
 ## 5. Porting workflow (test-first)
