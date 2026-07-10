@@ -53,7 +53,7 @@ jobs:
 
       - name: Coverage report
         if: always() && runner.os == 'Linux'
-        uses: danielpalme/ReportGenerator-GitHub-Action@e3af7259842d9c814021ea121f85526e0872b25f # v5.3.9
+        uses: danielpalme/ReportGenerator-GitHub-Action@049f7ec958c672fd31d5cc1cb01622dc8d2e23ab # v5.5.10
         with:
           reports: "${{ github.workspace }}/TestResults/**/coverage.cobertura.xml"
           targetdir: "${{ github.workspace }}/coveragereport"
