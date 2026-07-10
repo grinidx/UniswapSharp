@@ -10,7 +10,7 @@ the V3 periphery contracts.
 
 - Target framework: **.NET 10** (`net10.0`)
 - V3 core (entities + math) is implemented and unit-tested
-- 194 xUnit tests; all passing (see Outstanding work)
+- 194 xUnit v3 tests; all passing (see Outstanding work)
 - A handful of calldata / action-builder methods remain stubbed with `NotImplementedException`
 - Not yet packaged or published to NuGet
 
@@ -47,10 +47,11 @@ coverage comment, and a `$GITHUB_STEP_SUMMARY` table. CodeQL runs via `codeql.ym
 
 ## Dependencies
 
-- **Nethereum** (`Nethereum.ABI`, `.Contracts`, `.Util`, `.Web3`) - ABI encoding,
-  contract calls, address / keccak utilities
-- **ExtendedNumerics.BigRational** - exact rational arithmetic for the fraction and price types
-- **xUnit** + **AwesomeAssertions** (test project only)
+- **Nethereum** 6.1.0 (`Nethereum.ABI`, `.Contracts`, `.Util`, `.Web3`) - ABI encoding,
+  contract calls, address / keccak utilities. An explicit `Newtonsoft.Json` 13.0.4 pin overrides
+  the vulnerable 11.0.2 that `Nethereum.Hex` still drags in transitively (NU1903).
+- **ExtendedNumerics.BigRational** 3000.0.2.132 - exact rational arithmetic for the fraction and price types
+- **xUnit v3** + **AwesomeAssertions** (test project only)
 
 ## Porting methodology
 
@@ -103,19 +104,18 @@ Phase A (repository foundations) is complete: .NET 10, CI with PR reporting/cove
 branch protection + security hardening, community-health files, docs, and NuGet packaging are all in
 place. Remaining work is **Phase B** (V3 feature-parity port) and beyond.
 
-1. **Phase B — first pass: dependency-update sweep (test-verified).** Six major dependency bumps were
-   deferred from Phase A because they need per-change verification, not a blind merge. Do these **first**
-   in Phase B, each behind a green suite — and for runtime deps, with numeric parity checked to the digit:
-   - **Runtime (protocol-math critical — verify numeric parity):**
-     - `Nethereum.ABI` / `.Contracts` / `.Util` / `.Web3`: `4.21.4` → `6.x` (ABI encoding, address/keccak)
-     - `ExtendedNumerics.BigRational`: `2023.1000.2.328` → `3000.x` (fraction/price arithmetic)
-   - **Test infrastructure (verify the suite runs green):**
-     - `coverlet.collector`: `6.0.2` → `10.x`
-     - `Microsoft.NET.Test.Sdk`: `17.11.0` → `18.x`
-     - `xunit.runner.visualstudio`: `2.8.2` → `3.x` (and consider the `xunit` v3 major)
-   - **CI:** bump `actions/setup-dotnet` to a Node-24 release to clear the remaining Node-20 deprecation
-     warning (`actions/checkout` is already on v7). Also correct the stale `# v4` version comments on the
-     Dependabot-merged action pins in `.github/workflows/_test.yml` (the SHAs are v7 but the comments read `# v4`).
+1. **Phase B — first pass: dependency-update sweep (test-verified)** - DONE. All six deferred major
+   bumps landed, each behind a green suite (194/194) and with numeric parity verified to the digit for
+   the runtime deps:
+   - **Runtime (protocol-math critical):** `Nethereum.ABI` / `.Contracts` / `.Util` / `.Web3`
+     `4.21.4` → `6.1.0` (#28, plus an explicit `Newtonsoft.Json` `13.0.4` pin to clear the transitive
+     NU1903 / GHSA-5crp-9r3c-p9vr); `ExtendedNumerics.BigRational` `2023.1000.2.328` → `3000.0.2.132` (#29).
+   - **Test infrastructure:** `coverlet.collector` `6.0.2` → `10.0.1`, `Microsoft.NET.Test.Sdk`
+     `17.11.0` → `18.7.0`, full `xunit` v2 → `xunit.v3` `3.2.2` (+ `xunit.runner.visualstudio` `3.1.5`,
+     dropped `XunitContext`; converted the `async void` tests to `async Task`) (#27).
+   - **CI:** `actions/setup-dotnet` → `v5.4.0` (node24) across all workflows to clear the Node-20
+     deprecation, stale `# v4`/`# v2`/`# v3` action version comments corrected, and `codeql-action/analyze`
+     aligned to `init` at v4.37.0 (#26).
 2. **Seven `NotImplementedException` stubs** - the calldata / action builders: `SwapQuoter`,
    `NonfungiblePositionManager`, `Payments` (three methods), plus `PositionLibrary.SubIn256`
    and `PriceTick`. Port from the upstream references in the table above, with tests.
