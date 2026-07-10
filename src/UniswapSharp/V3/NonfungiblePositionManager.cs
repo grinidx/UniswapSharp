@@ -302,4 +302,98 @@ public class NonfungiblePositionManager
             Value = Utilities.ToHex(BigInteger.Zero)
         };
     }
+
+    public class SafeTransferOptions
+    {
+        public string Sender { get; set; }
+        public string Recipient { get; set; }
+        public BigInteger TokenId { get; set; }
+        public string? Data { get; set; }
+    }
+
+    public static MethodParameters SafeTransferFromParameters(SafeTransferOptions options)
+    {
+        string recipient = AddressValidator.ValidateAndParseAddress(options.Recipient);
+        string sender = AddressValidator.ValidateAndParseAddress(options.Sender);
+
+        string calldata;
+        if (options.Data != null)
+        {
+            calldata = EncodeFunctionData("safeTransferFrom(address,address,uint256,bytes)",
+                new ABIValue("address", sender),
+                new ABIValue("address", recipient),
+                new ABIValue("uint256", options.TokenId),
+                new ABIValue("bytes", options.Data.HexToByteArray()));
+        }
+        else
+        {
+            calldata = EncodeFunctionData("safeTransferFrom(address,address,uint256)",
+                new ABIValue("address", sender),
+                new ABIValue("address", recipient),
+                new ABIValue("uint256", options.TokenId));
+        }
+
+        return new MethodParameters
+        {
+            Calldata = calldata,
+            Value = Utilities.ToHex(BigInteger.Zero)
+        };
+    }
+
+    public class TypedDataField
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+    }
+
+    public class TypedDataDomain
+    {
+        public string Name { get; set; }
+        public int ChainId { get; set; }
+        public string Version { get; set; }
+        public string VerifyingContract { get; set; }
+    }
+
+    public class NFTPermitValues
+    {
+        public string Spender { get; set; }
+        public BigInteger TokenId { get; set; }
+        public BigInteger Deadline { get; set; }
+        public BigInteger Nonce { get; set; }
+    }
+
+    public class NFTPermitData
+    {
+        public TypedDataDomain Domain { get; set; }
+        public Dictionary<string, List<TypedDataField>> Types { get; set; }
+        public NFTPermitValues Values { get; set; }
+    }
+
+    private static Dictionary<string, List<TypedDataField>> NftPermitTypes() => new()
+    {
+        ["Permit"] = new List<TypedDataField>
+        {
+            new() { Name = "spender", Type = "address" },
+            new() { Name = "tokenId", Type = "uint256" },
+            new() { Name = "nonce", Type = "uint256" },
+            new() { Name = "deadline", Type = "uint256" },
+        }
+    };
+
+    // Prepare the params for an EIP-712 signTypedData request.
+    public static NFTPermitData GetPermitData(NFTPermitValues permit, string positionManagerAddress, int chainId)
+    {
+        return new NFTPermitData
+        {
+            Domain = new TypedDataDomain
+            {
+                Name = "Uniswap V3 Positions NFT-V1",
+                ChainId = chainId,
+                Version = "1",
+                VerifyingContract = positionManagerAddress
+            },
+            Types = NftPermitTypes(),
+            Values = permit
+        };
+    }
 }
