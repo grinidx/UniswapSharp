@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Nethereum.ABI;
 using Nethereum.Hex.HexConvertors.Extensions;
 using UniswapSharp.Core;

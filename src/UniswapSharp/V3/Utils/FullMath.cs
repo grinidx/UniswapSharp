@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 // ReSharper disable InconsistentNaming
 
 namespace UniswapSharp.V3.Utils;

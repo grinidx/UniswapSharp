@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Nethereum.ABI;
 using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Util;
@@ -108,7 +108,7 @@ public abstract class SwapRouter
                             sqrtPriceLimitX96 = (options.SqrtPriceLimitX96 ?? BigInteger.Zero).ToHex(false)
                         };
 
-                       // calldatas.Add(INTERFACE.GetFunctionEncoder("exactOutputSingle").EncodeParameters(new[] { exactOutputSingleParams }));
+                        // calldatas.Add(INTERFACE.GetFunctionEncoder("exactOutputSingle").EncodeParameters(new[] { exactOutputSingleParams }));
                     }
                 }
                 else
@@ -131,7 +131,7 @@ public abstract class SwapRouter
                             amountOutMinimum = amountOut
                         };
 
-                      //  calldatas.Add(INTERFACE.GetFunctionEncoder("exactInput").EncodeParameters(new[] { exactInputParams }));
+                        //  calldatas.Add(INTERFACE.GetFunctionEncoder("exactInput").EncodeParameters(new[] { exactInputParams }));
                     }
                     else
                     {
@@ -144,7 +144,7 @@ public abstract class SwapRouter
                             amountInMaximum = amountIn
                         };
 
-                       // calldatas.Add(INTERFACE.GetFunctionEncoder("exactOutput").EncodeParameters(new[] { exactOutputParams }));
+                        // calldatas.Add(INTERFACE.GetFunctionEncoder("exactOutput").EncodeParameters(new[] { exactOutputParams }));
                     }
                 }
             }
@@ -160,7 +160,7 @@ public abstract class SwapRouter
                 }
                 else
                 {
-                   // calldatas.Add(Payments.EncodeSweepToken(sampleTrade.OutputAmount.Currency.Wrapped, totalAmountOut.Quotient, recipient, options.Fee));
+                    // calldatas.Add(Payments.EncodeSweepToken(sampleTrade.OutputAmount.Currency.Wrapped, totalAmountOut.Quotient, recipient, options.Fee));
                 }
             }
             else

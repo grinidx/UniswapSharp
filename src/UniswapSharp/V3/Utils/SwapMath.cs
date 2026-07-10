@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using static UniswapSharp.V3.Utils.V3Swap;
 
 namespace UniswapSharp.V3.Utils;
@@ -13,7 +13,7 @@ public abstract class SwapMath
     public class ReturnValues
     {
         public BigInteger SqrtRatioNextX96 { get; set; } = BigInteger.Zero;
-        public BigInteger AmountIn{ get; set; } = BigInteger.Zero;
+        public BigInteger AmountIn { get; set; } = BigInteger.Zero;
         public BigInteger AmountOut { get; set; } = BigInteger.Zero;
         public BigInteger FeeAmount { get; set; } = BigInteger.Zero;
     }
@@ -70,9 +70,9 @@ public abstract class SwapMath
                 ? SqrtPriceMath.GetAmount1Delta(sqrtRatioTargetX96, sqrtRatioCurrentX96, liquidity, false)
                 : SqrtPriceMath.GetAmount0Delta(sqrtRatioCurrentX96, sqrtRatioTargetX96, liquidity, false);
 
-          
 
-            if ((BigInteger.Multiply(amountRemaining,Constants.NEGATIVE_ONE) >= returnValues.AmountOut))
+
+            if ((BigInteger.Multiply(amountRemaining, Constants.NEGATIVE_ONE) >= returnValues.AmountOut))
             {
                 returnValues.SqrtRatioNextX96 = sqrtRatioTargetX96;
             }
@@ -81,7 +81,7 @@ public abstract class SwapMath
                 returnValues.SqrtRatioNextX96 = SqrtPriceMath.GetNextSqrtPriceFromOutput(
                     sqrtRatioCurrentX96,
                     liquidity,
-                    BigInteger.Multiply(amountRemaining , Constants.NEGATIVE_ONE),
+                    BigInteger.Multiply(amountRemaining, Constants.NEGATIVE_ONE),
                     zeroForOne
                 );
             }

@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.V3.Utils;
@@ -37,7 +37,7 @@ public class Position
         Liquidity = liquidity;
     }
 
-    public Pool Pool { get;  }
+    public Pool Pool { get; }
     public int TickLower { get; }
     public int TickUpper { get; }
     public BigInteger Liquidity { get; }

@@ -1,4 +1,4 @@
-﻿using UniswapSharp.V3.Entities;
+using UniswapSharp.V3.Entities;
 using UniswapSharp.V3.Utils;
 
 namespace UniswapSharp.Testing.V3.Entities;

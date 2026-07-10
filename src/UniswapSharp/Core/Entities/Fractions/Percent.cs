@@ -1,8 +1,8 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace UniswapSharp.Core.Entities.Fractions;
 
-public class Percent(BigInteger numerator, BigInteger denominator= default) : Fraction(numerator, denominator), IEquatable<Percent>
+public class Percent(BigInteger numerator, BigInteger denominator = default) : Fraction(numerator, denominator), IEquatable<Percent>
 {
     // ReSharper disable once InconsistentNaming
     private static readonly Fraction ONE_HUNDRED = new(new BigInteger(100));
@@ -19,22 +19,22 @@ public class Percent(BigInteger numerator, BigInteger denominator= default) : Fr
         return ToPercent(base.Add(other));
     }
 
-    public  Percent Add(BigInteger other)
+    public Percent Add(BigInteger other)
     {
         return ToPercent(base.Add(other));
     }
 
-    public  Percent Subtract(Fraction other)
+    public Percent Subtract(Fraction other)
     {
         return ToPercent(base.Subtract(other));
     }
 
-    public  Percent Subtract(BigInteger other)
+    public Percent Subtract(BigInteger other)
     {
         return ToPercent(base.Subtract(other));
     }
 
-    public  Percent Multiply(Fraction other)
+    public Percent Multiply(Fraction other)
     {
         return ToPercent(base.Multiply(other));
     }
@@ -44,7 +44,7 @@ public class Percent(BigInteger numerator, BigInteger denominator= default) : Fr
         return ToPercent(base.Multiply(other));
     }
 
-    public  Percent Divide(Fraction other)
+    public Percent Divide(Fraction other)
     {
         return ToPercent(base.Divide(other));
     }

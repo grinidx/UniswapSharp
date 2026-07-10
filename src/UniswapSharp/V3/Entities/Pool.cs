@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.V3.Utils;
@@ -18,7 +18,7 @@ public class Pool
         //if (!(fee is int) || fee >= 1_000_000)
         //    throw new ArgumentException("FEE");
 
-      
+
         var tickCurrentSqrtRatioX96 = TickMath.GetSqrtRatioAtTick(tickCurrent);
         var nextTickSqrtRatioX96 = TickMath.GetSqrtRatioAtTick(tickCurrent + 1);
         if (sqrtRatioX96 < tickCurrentSqrtRatioX96 || sqrtRatioX96 > nextTickSqrtRatioX96)

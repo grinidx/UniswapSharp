@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using UniswapSharp.V3.Entities;
 
 namespace UniswapSharp.V3.Utils;

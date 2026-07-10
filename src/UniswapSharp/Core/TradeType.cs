@@ -1,4 +1,4 @@
-﻿namespace UniswapSharp.Core;
+namespace UniswapSharp.Core;
 
 public enum TradeType
 {

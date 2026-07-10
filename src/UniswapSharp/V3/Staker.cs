@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Nethereum.ABI;
 using Nethereum.Contracts;
 using Nethereum.Hex.HexConvertors.Extensions;
@@ -14,7 +14,7 @@ namespace UniswapSharp.V3;
 
 public abstract class Staker
 {
-    public static Contract Interface { get; } 
+    public static Contract Interface { get; }
     private const string INCENTIVE_KEY_ABI = "tuple(address rewardToken, address pool, uint256 startTime, uint256 endTime, address refundee)";
 
     private static string[] EncodeClaim(IncentiveKey incentiveKey, IClaimOptions options)

@@ -1,4 +1,4 @@
-﻿namespace UniswapSharp.Core.Entities.Fractions;
+namespace UniswapSharp.Core.Entities.Fractions;
 
 public enum Rounding
 {

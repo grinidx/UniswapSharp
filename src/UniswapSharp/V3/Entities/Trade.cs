@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using UniswapSharp.Core;
@@ -13,15 +13,16 @@ public class Trade<TInput, TOutput>
 
 {
 
-    public Route<TInput, TOutput> Route {
+    public Route<TInput, TOutput> Route
+    {
         get
         {
-            if (Swaps.Count !=1)
+            if (Swaps.Count != 1)
             {
                 throw new System.InvalidOperationException("Multiple Routes");
             }
             return Swaps[0].Route;
-                   }
+        }
     }
 
     public List<Swap<TInput, TOutput>> Swaps { get; }
@@ -31,7 +32,7 @@ public class Trade<TInput, TOutput>
     private CurrencyAmount<TOutput>? _outputAmount;
     private Price<TInput, TOutput>? _executionPrice;
     private Percent? _priceImpact;
-    
+
 
     public CurrencyAmount<TInput> InputAmount
     {
@@ -46,7 +47,7 @@ public class Trade<TInput, TOutput>
             var totalInputFromRoutes = Swaps
                 .Aggregate(
                     CurrencyAmount<TInput>.FromRawAmount<TInput>(inputCurrency, 0),
-                    (total, swap) => total.Add( swap.InputAmount)
+                    (total, swap) => total.Add(swap.InputAmount)
                 );
 
             _inputAmount = totalInputFromRoutes;
@@ -66,7 +67,7 @@ public class Trade<TInput, TOutput>
             var outputCurrency = Swaps[0].OutputAmount.Currency;
             var totalOutputFromRoutes = Swaps
 
-                .Aggregate(CurrencyAmount<TOutput>.FromRawAmount<TOutput>(outputCurrency, 0), 
+                .Aggregate(CurrencyAmount<TOutput>.FromRawAmount<TOutput>(outputCurrency, 0),
                     (total, cur) => total.Add(cur.OutputAmount));
 
             _outputAmount = totalOutputFromRoutes;
@@ -112,7 +113,7 @@ public class Trade<TInput, TOutput>
 
     public static async Task<Trade<TInput, TOutput>> ExactIn(
         Route<TInput, TOutput> route,
-        CurrencyAmount<TInput> amountIn) 
+        CurrencyAmount<TInput> amountIn)
     {
         return await FromRoute<TInput>(route, amountIn, TradeType.EXACT_INPUT);
     }
@@ -145,7 +146,7 @@ public class Trade<TInput, TOutput>
             for (int i = 0; i < route.TokenPath.Count - 1; i++)
             {
                 var pool = route.Pools[i];
-                var (outputAmountToken,_) = await pool.GetOutputAmount(amounts[i]);
+                var (outputAmountToken, _) = await pool.GetOutputAmount(amounts[i]);
                 amounts[i + 1] = outputAmountToken;
             }
 
@@ -167,7 +168,7 @@ public class Trade<TInput, TOutput>
             for (int i = route.TokenPath.Count - 1; i > 0; i--)
             {
                 var pool = route.Pools[i - 1];
-                var (inputAmountToken,_) = await pool.GetInputAmount(amounts[i]);
+                var (inputAmountToken, _) = await pool.GetInputAmount(amounts[i]);
                 amounts[i - 1] = inputAmountToken;
             }
 
@@ -234,7 +235,7 @@ public class Trade<TInput, TOutput>
                 for (int i = route.TokenPath.Count - 1; i > 0; i--)
                 {
                     var pool = route.Pools[i - 1];
-                    var (inputAmountToken,_) = await pool.GetInputAmount(amounts[i]);
+                    var (inputAmountToken, _) = await pool.GetInputAmount(amounts[i]);
                     amounts[i - 1] = inputAmountToken;
                 }
 
@@ -261,8 +262,8 @@ public class Trade<TInput, TOutput>
 
     public static Trade<TInput, TOutput> CreateUncheckedTradeWithMultipleRoutes(List<RouteInput<TInput, TOutput>> routes, TradeType tradeType)
     {
-        var swaps =routes.Select(r => new Swap<TInput, TOutput>(r.Route, r.InputAmount, r.OutputAmount)).ToList();
-        return new Trade<TInput, TOutput>(swaps,tradeType);
+        var swaps = routes.Select(r => new Swap<TInput, TOutput>(r.Route, r.InputAmount, r.OutputAmount)).ToList();
+        return new Trade<TInput, TOutput>(swaps, tradeType);
     }
 
     private Trade(List<Swap<TInput, TOutput>> swaps, TradeType tradeType)
@@ -363,17 +364,17 @@ public class Trade<TInput, TOutput>
     BestTradeOptions? options = null,
     List<Pool>? currentPools = null,
     CurrencyAmount<BaseCurrency>? nextAmountIn = null,
-    List<Trade<TInput, TOutput>>? bestTrades = null) 
+    List<Trade<TInput, TOutput>>? bestTrades = null)
     {
         options ??= new BestTradeOptions();
         currentPools ??= new List<Pool>();
-        nextAmountIn ??= currencyAmountIn.AsBaseCurrency() ;
+        nextAmountIn ??= currencyAmountIn.AsBaseCurrency();
         bestTrades ??= new List<Trade<TInput, TOutput>>();
 
         if (pools.Count == 0) throw new ArgumentException("POOLS");
         if (options.MaxHops == 0) throw new ArgumentException("MAX_HOPS");
 
-        if (!(currencyAmountIn.Equals( nextAmountIn) || currentPools.Count > 0)) throw new ArgumentException("INVALID_RECURSION");
+        if (!(currencyAmountIn.Equals(nextAmountIn) || currentPools.Count > 0)) throw new ArgumentException("INVALID_RECURSION");
 
         var amountIn = nextAmountIn?.Wrapped();
         var tokenOut = currencyOut.Wrapped();
@@ -383,7 +384,7 @@ public class Trade<TInput, TOutput>
             var pool = pools[i];
             if (!pool.Token0.Equals(amountIn?.Currency) && !pool.Token1.Equals(amountIn?.Currency)) continue;
 
-    
+
 
             CurrencyAmount<Token> amountOut;
             try
@@ -399,12 +400,12 @@ public class Trade<TInput, TOutput>
 
             if (amountOut.Currency.IsToken && amountOut.Currency.Equals(tokenOut))
             {
-        
-                var newRoute = new Route<TInput,TOutput>(currentPools.Concat(new[] { pool }).ToList(), currencyAmountIn.Currency, currencyOut);
+
+                var newRoute = new Route<TInput, TOutput>(currentPools.Concat(new[] { pool }).ToList(), currencyAmountIn.Currency, currencyOut);
                 var newTrade = await Trade<TInput, TOutput>.FromRoute(newRoute, currencyAmountIn, TradeType.EXACT_INPUT);
                 SortedInsert(bestTrades, newTrade, options.MaxNumResults, TradeComparator);
 
-          
+
             }
             else if (options.MaxHops > 1 && pools.Count > 1)
             {
@@ -445,7 +446,7 @@ public class Trade<TInput, TOutput>
 
         if (pools.Count == 0) throw new ArgumentException("POOLS");
         if (options.MaxHops <= 0) throw new ArgumentException("MAX_HOPS");
-        if (!(currencyAmountOut.Equals( nextAmountOut)  || currentPools.Count > 0)) throw new ArgumentException("INVALID_RECURSION");
+        if (!(currencyAmountOut.Equals(nextAmountOut) || currentPools.Count > 0)) throw new ArgumentException("INVALID_RECURSION");
 
         var amountOut = nextAmountOut.Wrapped();
         var tokenIn = currencyIn.Wrapped();
@@ -511,51 +512,51 @@ public class Trade<TInput, TOutput>
 
 
 
-        public static int TradeComparator(
-            Trade<TInput, TOutput> a,
-            Trade<TInput, TOutput> b)
- 
-     
-        {
-            // must have same input and output token for comparison
-            if (!a.InputAmount.Currency.Equals(b.InputAmount.Currency))
-                throw new InvalidOperationException("INPUT_CURRENCY");
-            if (!a.OutputAmount.Currency.Equals(b.OutputAmount.Currency))
-                throw new InvalidOperationException("OUTPUT_CURRENCY");
+    public static int TradeComparator(
+        Trade<TInput, TOutput> a,
+        Trade<TInput, TOutput> b)
 
-            if (a.OutputAmount.Equals(b.OutputAmount))
+
+    {
+        // must have same input and output token for comparison
+        if (!a.InputAmount.Currency.Equals(b.InputAmount.Currency))
+            throw new InvalidOperationException("INPUT_CURRENCY");
+        if (!a.OutputAmount.Currency.Equals(b.OutputAmount.Currency))
+            throw new InvalidOperationException("OUTPUT_CURRENCY");
+
+        if (a.OutputAmount.Equals(b.OutputAmount))
+        {
+            if (a.InputAmount.Equals(b.InputAmount))
             {
-                if (a.InputAmount.Equals(b.InputAmount))
-                {
-                    // consider the number of hops since each hop costs gas
-                    int aHops = a.Swaps.Sum(swap => swap.Route.TokenPath.Count);
-                    int bHops = b.Swaps.Sum(swap => swap.Route.TokenPath.Count);
-                    return aHops - bHops;
-                }
-                // trade A requires less input than trade B, so A should come first
-                if (a.InputAmount.LessThan(b.InputAmount))
-                {
-                    return -1;
-                }
-                else
-                {
-                    return 1;
-                }
+                // consider the number of hops since each hop costs gas
+                int aHops = a.Swaps.Sum(swap => swap.Route.TokenPath.Count);
+                int bHops = b.Swaps.Sum(swap => swap.Route.TokenPath.Count);
+                return aHops - bHops;
+            }
+            // trade A requires less input than trade B, so A should come first
+            if (a.InputAmount.LessThan(b.InputAmount))
+            {
+                return -1;
             }
             else
             {
-                // tradeA has less output than trade B, so should come second
-                if (a.OutputAmount.LessThan(b.OutputAmount))
-                {
-                    return 1;
-                }
-                else
-                {
-                    return -1;
-                }
+                return 1;
             }
         }
-  
+        else
+        {
+            // tradeA has less output than trade B, so should come second
+            if (a.OutputAmount.LessThan(b.OutputAmount))
+            {
+                return 1;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+    }
+
 
     public class BestTradeOptions
     {

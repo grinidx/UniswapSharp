@@ -1,0 +1,32 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.{cs,csx}]
+indent_size = 4
+# Namespaces, usings
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+csharp_using_directive_placement = outside_namespace:warning
+# Prefer file-scoped namespaces (matches existing code)
+csharp_style_namespace_declarations = file_scoped:warning
+# Braces and newlines
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = true:suggestion
+# 'this.' preferences
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+# var usage — leave as-is (codebase mixes); do not enforce
+csharp_style_var_for_built_in_types = false:none
+csharp_style_var_when_type_is_apparent = false:none
+
+[*.{yml,yaml,json,md}]
+indent_size = 2
+
+[*.{csproj,props,targets}]
+indent_size = 2

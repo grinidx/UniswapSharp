@@ -1,4 +1,4 @@
-﻿using Nethereum.Contracts;
+using Nethereum.Contracts;
 using Newtonsoft.Json.Linq;
 
 namespace UniswapSharp.V3;

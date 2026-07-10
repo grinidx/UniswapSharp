@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Reflection;
 using System.Text.Json;
@@ -121,7 +121,7 @@ public static class TickList
             int index = NextInitializedTick(ticks, tick, lte).Index;
             int nextInitializedTick = Math.Max(minimum, index);
 
-    
+
             return (nextInitializedTick, nextInitializedTick == index);
         }
         else

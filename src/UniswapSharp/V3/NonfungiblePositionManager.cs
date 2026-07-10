@@ -1,4 +1,4 @@
-﻿using UniswapSharp.Core.Entities.Fractions;
+using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.V3.Entities;
 using UniswapSharp.V3.Utils;
 
@@ -12,7 +12,7 @@ public class NonfungiblePositionManager
         public string Value { get; set; }
     }
 
-   // public static readonly Interface INTERFACE = new Interface(INonfungiblePositionManager.abi);
+    // public static readonly Interface INTERFACE = new Interface(INonfungiblePositionManager.abi);
 
     private NonfungiblePositionManager() { }
 

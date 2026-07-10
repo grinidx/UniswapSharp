@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Util;
 

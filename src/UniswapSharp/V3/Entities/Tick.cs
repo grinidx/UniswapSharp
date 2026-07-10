@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 // ReSharper disable InconsistentNaming
 
 namespace UniswapSharp.V3.Entities;
@@ -9,13 +9,13 @@ public class Tick
     public static readonly int MAX_TICK = 887272;
 
     public int Index { get; }
-    public BigInteger LiquidityGross { get;  }
+    public BigInteger LiquidityGross { get; }
     public BigInteger LiquidityNet { get; }
 
 
 
 
-    public Tick(int index,  BigInteger liquidityNet, BigInteger liquidityGross)
+    public Tick(int index, BigInteger liquidityNet, BigInteger liquidityGross)
     {
         if (index < MIN_TICK || index > MAX_TICK)
         {

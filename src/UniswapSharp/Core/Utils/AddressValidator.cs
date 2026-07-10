@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using Nethereum.Hex.HexConvertors.Extensions;
@@ -176,7 +176,7 @@ public static class AddressValidator
             nonceHex = "0x" + nonceHex;
         }
 
-    
+
         var encodedRlp = RlpEncoder.Encode(new[] { fromAddress.HexToByteArray(), nonceHex.HexToByteArray() });
 
         var keccak = new Sha3Keccack();

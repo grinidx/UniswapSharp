@@ -1,4 +1,4 @@
-﻿namespace UniswapSharp.Core.Entities;
+namespace UniswapSharp.Core.Entities;
 
 /// <summary>
 /// Represents the native currency of the chain on which it resides, e.g.

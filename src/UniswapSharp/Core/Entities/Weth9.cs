@@ -1,9 +1,9 @@
-﻿namespace UniswapSharp.Core.Entities;
+namespace UniswapSharp.Core.Entities;
 
 /// <summary>
 /// Known WETH9 implementation addresses, used in our implementation of Ether#wrapped
 /// </summary>
-public  static class Weth9
+public static class Weth9
 {
     public static readonly Dictionary<int, Token> Tokens = new Dictionary<int, Token>
     {

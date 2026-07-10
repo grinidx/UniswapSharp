@@ -1,10 +1,10 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Numerics;
 using ExtendedNumerics;
 
 namespace UniswapSharp.Core.Entities.Fractions;
 
-public class Fraction(BigInteger numerator, BigInteger denominator = default):IEquatable<Fraction>
+public class Fraction(BigInteger numerator, BigInteger denominator = default) : IEquatable<Fraction>
 {
     public BigInteger Numerator { get; protected set; } = numerator;
     public BigInteger Denominator { get; protected set; } = denominator == default ? BigInteger.One : denominator;
@@ -113,8 +113,8 @@ public class Fraction(BigInteger numerator, BigInteger denominator = default):IE
         }
         // From BigRationalLibrary
  ;
-        var quotient = SetSigFigs((decimal)new BigRational(Numerator, Denominator) , significantDigits, rounding);
-        
+        var quotient = SetSigFigs((decimal)new BigRational(Numerator, Denominator), significantDigits, rounding);
+
         return quotient.ToString(format);
     }
 
@@ -126,7 +126,7 @@ public class Fraction(BigInteger numerator, BigInteger denominator = default):IE
         }
 
         var quotient = (decimal)((double)Numerator / (double)Denominator);
-        return Round(quotient, decimalPlaces, rounding).ToString(format??$"F{decimalPlaces}", CultureInfo.InvariantCulture);
+        return Round(quotient, decimalPlaces, rounding).ToString(format ?? $"F{decimalPlaces}", CultureInfo.InvariantCulture);
     }
 
     public static decimal Round(decimal value, int decimals, Rounding mode)
@@ -155,7 +155,7 @@ public class Fraction(BigInteger numerator, BigInteger denominator = default):IE
 
     public bool Equals(Fraction? other)
     {
-             var otherParsed = TryParseFraction(other);
+        var otherParsed = TryParseFraction(other);
         return Numerator * otherParsed.Denominator == otherParsed.Numerator * Denominator;
     }
 }
