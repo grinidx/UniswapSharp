@@ -125,7 +125,7 @@ namespace UniswapSharp.Testing.Core.Entities.Fractions
         {
             var token = new Token(1, ADDRESS_ONE, 0);
             var amount = CurrencyAmount<Token>.FromRawAmount(token, 1000);
-            Assert.Equal("1000", amount.ToExact("{00000}"));
+            Assert.Equal("1000", amount.ToExact());
         }
 
         [Fact]
