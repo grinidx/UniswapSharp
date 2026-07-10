@@ -1,4 +1,4 @@
-﻿namespace UniswapSharp.Core.Entities;
+namespace UniswapSharp.Core.Entities;
 
 public class Ether : NativeCurrency
 {
@@ -7,10 +7,10 @@ public class Ether : NativeCurrency
     public override Token Wrapped()
     {
 
-            var weth9 = Weth9.Tokens[this.ChainId];
-            if (weth9 == null) throw new InvalidOperationException("WRAPPED");
-            return weth9;
-     
+        var weth9 = Weth9.Tokens[this.ChainId];
+        if (weth9 == null) throw new InvalidOperationException("WRAPPED");
+        return weth9;
+
     }
 
     private static Dictionary<int, Ether> _etherCache = new Dictionary<int, Ether>();

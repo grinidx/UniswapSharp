@@ -1,4 +1,4 @@
-﻿using UniswapSharp.Core.Entities;
+using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 
 namespace UniswapSharp.Testing.Core.Entities.Fractions;
@@ -22,7 +22,7 @@ public class PriceTests
     [Fact]
     public void Constructor_ArrayFormat_Works()
     {
-        var price = new Price<Token,Token>(t0, t1, 1, 54321);
+        var price = new Price<Token, Token>(t0, t1, 1, 54321);
         Assert.Equal("54321", price.ToSignificant(5));
         Assert.True(price.BaseCurrency.Equals(t0));
         Assert.True(price.QuoteCurrency.Equals(t1));
@@ -31,7 +31,7 @@ public class PriceTests
     [Fact]
     public void Constructor_ObjectFormat_Works()
     {
-        var price = new Price<Token, Token>(CurrencyAmount<Token>.FromRawAmount(t0, 1),CurrencyAmount<Token>.FromRawAmount(t1, 54321));
+        var price = new Price<Token, Token>(CurrencyAmount<Token>.FromRawAmount(t0, 1), CurrencyAmount<Token>.FromRawAmount(t1, 54321));
         Assert.Equal("54321", price.ToSignificant(5));
         Assert.True(price.BaseCurrency.Equals(t0));
         Assert.True(price.QuoteCurrency.Equals(t1));
@@ -55,7 +55,7 @@ public class PriceTests
     [Fact]
     public void ToSignificant_NoDecimalsFlipRatio()
     {
-        var p = new Price< Token, Token> (t0, t1, 456, 123);
+        var p = new Price<Token, Token>(t0, t1, 456, 123);
         Assert.Equal("0.2697", p.ToSignificant(4));
     }
 

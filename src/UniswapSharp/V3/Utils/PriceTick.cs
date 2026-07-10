@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 

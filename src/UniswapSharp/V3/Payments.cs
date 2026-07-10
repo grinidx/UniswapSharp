@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Nethereum.ABI;
 using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Util;
@@ -80,10 +80,10 @@ public abstract class Payments
         string Recipient { get; set; }
     }
 
-    public class FeeOptions: IFeeOptions
+    public class FeeOptions : IFeeOptions
     {
         public Percent Fee { get; set; }
         public string Recipient { get; set; }
     }
- 
+
 }

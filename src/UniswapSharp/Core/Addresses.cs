@@ -1,4 +1,4 @@
-﻿
+
 // ReSharper disable InconsistentNaming
 
 namespace UniswapSharp.Core;
@@ -19,7 +19,7 @@ public static class Addresses
     }
 
     public static readonly Dictionary<ChainId, string> UNI_ADDRESSES = ConstructSameAddressMap("0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-        (List<ChainId>) [ChainId.OPTIMISM, ChainId.ARBITRUM_ONE, ChainId.POLYGON, ChainId.POLYGON_MUMBAI, ChainId.SEPOLIA]);
+        (List<ChainId>)[ChainId.OPTIMISM, ChainId.ARBITRUM_ONE, ChainId.POLYGON, ChainId.POLYGON_MUMBAI, ChainId.SEPOLIA]);
 
     public static readonly string UNISWAP_NFT_AIRDROP_CLAIM_ADDRESS = "0x8B799381ac40b838BBA4131ffB26197C432AFe78";
 

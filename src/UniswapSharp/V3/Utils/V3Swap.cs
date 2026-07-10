@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using UniswapSharp.V3.Entities;
 
 namespace UniswapSharp.V3.Utils;
@@ -90,7 +90,7 @@ public static class V3Swap
 
             step.SqrtPriceNextX96 = TickMath.GetSqrtRatioAtTick(step.TickNext);
 
-         
+
 
             (state.SqrtPriceX96, step.AmountIn, step.AmountOut, step.FeeAmount) = SwapMath.ComputeSwapStep(
                 state.SqrtPriceX96,
@@ -99,12 +99,12 @@ public static class V3Swap
                     : step.SqrtPriceNextX96 > sqrtPriceLimitX96)
                     ? sqrtPriceLimitX96.Value
                     : step.SqrtPriceNextX96,
-             
+
                 state.Liquidity,
                 state.AmountSpecifiedRemaining,
                 fee
             );
-            
+
             if (exactInput)
             {
                 state.AmountSpecifiedRemaining -= (step.AmountIn + step.FeeAmount);
@@ -115,7 +115,7 @@ public static class V3Swap
                 state.AmountSpecifiedRemaining += step.AmountOut;
                 state.AmountCalculated += (step.AmountIn + step.FeeAmount);
 
-           }
+            }
 
             if (state.SqrtPriceX96 == step.SqrtPriceNextX96)
             {
@@ -133,7 +133,7 @@ public static class V3Swap
             {
                 state.Tick = TickMath.GetTickAtSqrtRatio(state.SqrtPriceX96);
 
-              
+
             }
 
             cnt++;

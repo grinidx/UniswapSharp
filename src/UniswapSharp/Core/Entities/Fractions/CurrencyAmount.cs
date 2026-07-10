@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Numerics;
 
 namespace UniswapSharp.Core.Entities.Fractions;
@@ -92,17 +92,17 @@ public class CurrencyAmount<T> : Fraction, IEquatable<CurrencyAmount<T>> where T
     public CurrencyAmount<Token>? Wrapped()
     {
 
-            if (Currency is Token)
-            {
-               var x = this as CurrencyAmount<Token>;
+        if (Currency is Token)
+        {
+            var x = this as CurrencyAmount<Token>;
 
-                return x ?? FromFractionalAmount(Currency.Wrapped(), Numerator, Denominator);
-            }
+            return x ?? FromFractionalAmount(Currency.Wrapped(), Numerator, Denominator);
+        }
 
 
-            return FromFractionalAmount(Currency.Wrapped(), Numerator, Denominator);
+        return FromFractionalAmount(Currency.Wrapped(), Numerator, Denominator);
 
- 
+
     }
 
     public bool Equals(CurrencyAmount<T>? other)
@@ -111,8 +111,8 @@ public class CurrencyAmount<T> : Fraction, IEquatable<CurrencyAmount<T>> where T
     }
 
 
-    
-   
+
+
 
 
 }

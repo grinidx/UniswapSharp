@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace UniswapSharp.Core;
 
@@ -43,7 +43,7 @@ public static class Constants
         { "ROOTSTOCK ", "RBTC" },
     };
 
-    
+
 
     public static readonly BigInteger MaxUint256 = BigInteger.Parse("115792089237316195423570985008687907853269984665640564039457584007913129639935");
 

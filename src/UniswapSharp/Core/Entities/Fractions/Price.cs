@@ -1,9 +1,9 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Reflection;
 
 namespace UniswapSharp.Core.Entities.Fractions;
 
-public class Price<TBase, TQuote> : Fraction,IEquatable<Price<TBase, TQuote>> where TBase : BaseCurrency where TQuote : BaseCurrency
+public class Price<TBase, TQuote> : Fraction, IEquatable<Price<TBase, TQuote>> where TBase : BaseCurrency where TQuote : BaseCurrency
 {
     public TBase BaseCurrency { get; } // input i.e. denominator
     public TQuote QuoteCurrency { get; } // output i.e. numerator
@@ -22,7 +22,7 @@ public class Price<TBase, TQuote> : Fraction,IEquatable<Price<TBase, TQuote>> wh
 
 
     public Price(CurrencyAmount<TBase> baseAmount, CurrencyAmount<TQuote> quoteAmount)
-        : base(1,1)
+        : base(1, 1)
     {
         var result = quoteAmount.Divide(baseAmount);
         BaseCurrency = baseAmount.Currency;

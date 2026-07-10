@@ -1,4 +1,4 @@
-﻿using Nethereum.ABI;
+using Nethereum.ABI;
 using Nethereum.Hex.HexConvertors.Extensions;
 using UniswapSharp.Core.Entities;
 using UniswapSharp.V3.Entities;
@@ -15,7 +15,7 @@ public static class EncodeRouteToPath
     /// <param name="route">The v3 path to convert to an encoded path</param>
     /// <param name="exactOutput">Whether the route should be encoded in reverse, for making exact output swaps</param>
     /// <returns>The hex encoded path</returns>
-   public static string Encode(Route<BaseCurrency, BaseCurrency> route, bool exactOutput)
+    public static string Encode(Route<BaseCurrency, BaseCurrency> route, bool exactOutput)
     {
         var firstInputToken = (Token)route.Input;
         var types = new List<string>();

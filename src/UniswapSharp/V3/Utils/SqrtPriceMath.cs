@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 // ReSharper disable InconsistentNaming
 
@@ -44,7 +44,7 @@ public static class SqrtPriceMath
 
 
         }
-      
+
         return roundUp
             ? FullMath.MulDivRoundingUp(liquidity, sqrtRatioBX96 - sqrtRatioAX96, Constants.Q96)
             : BigInteger.Divide(BigInteger.Multiply(liquidity, BigInteger.Subtract(sqrtRatioBX96, sqrtRatioAX96)), Constants.Q96);
@@ -77,7 +77,7 @@ public static class SqrtPriceMath
     private static BigInteger GetNextSqrtPriceFromAmount0RoundingUp(BigInteger sqrtPX96, BigInteger liquidity, BigInteger amount, bool add)
     {
         if (amount == Constants.ZERO) return sqrtPX96;
-        BigInteger numerator1 = liquidity <<96;
+        BigInteger numerator1 = liquidity << 96;
 
         if (add)
         {
@@ -89,14 +89,14 @@ public static class SqrtPriceMath
             {
                 BigInteger denominator = AddIn256(numerator1, product);
 
-             
+
 
                 if (denominator >= numerator1)
                 {
                     return FullMath.MulDivRoundingUp(numerator1, sqrtPX96, denominator);
                 }
             }
-        
+
             return FullMath.MulDivRoundingUp(numerator1, Constants.ONE, BigInteger.Add(BigInteger.Divide(numerator1, sqrtPX96), amount));
         }
         else

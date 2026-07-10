@@ -1,4 +1,4 @@
-﻿namespace UniswapSharp.Core.Utils;
+namespace UniswapSharp.Core.Utils;
 
 public static class SortedInsert
 {

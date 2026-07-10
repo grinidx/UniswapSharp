@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using UniswapSharp.Core.Utils;
 
 namespace UniswapSharp.Testing.Core.Utils;

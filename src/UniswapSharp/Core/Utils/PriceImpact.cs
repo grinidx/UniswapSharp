@@ -1,4 +1,4 @@
-﻿using UniswapSharp.Core.Entities;
+using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 
 namespace UniswapSharp.Core.Utils;
@@ -15,12 +15,12 @@ namespace UniswapSharp.Core.Utils;
 /// 
 public static class PriceImpact
 {
-        public static Percent Compute<TBase, TQuote>(
-        Price<TBase, TQuote> midPrice,
-        CurrencyAmount<TBase> inputAmount,
-        CurrencyAmount<TQuote> outputAmount)
-        where TBase : BaseCurrency
-        where TQuote : BaseCurrency
+    public static Percent Compute<TBase, TQuote>(
+    Price<TBase, TQuote> midPrice,
+    CurrencyAmount<TBase> inputAmount,
+    CurrencyAmount<TQuote> outputAmount)
+    where TBase : BaseCurrency
+    where TQuote : BaseCurrency
     {
         var quotedOutputAmount = midPrice.Quote(inputAmount);
         // calculate price impact := (exactQuote - outputAmount) / exactQuote
