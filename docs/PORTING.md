@@ -42,7 +42,7 @@
 | `quoter.ts` | `SwapQuoter.cs` | Yes — `V3/SwapQuoterTests.cs` (7 cases, V1 + QuoterV2) | ported |
 | `selfPermit.ts` | `SelfPermit.cs` | Yes — `V3/SelfPermitTests.cs` (2 cases) | ported |
 | `staker.ts` | `Staker.cs` | Yes — `V3/StakerTests.cs` (8 cases) | ported |
-| `swapRouter.ts` | `SwapRouter.cs` | No dedicated test file | ported |
+| `swapRouter.ts` | `SwapRouter.cs` | Yes — `V3/SwapRouterTests.cs` (12 cases, single-trade block) | ported |
 | `utils/calldata.ts` | `Utils/Utilities.cs` (`ToHex`) | No dedicated test file | ported |
 | `utils/computePoolAddress.ts` | `Utils/ComputePoolAddress.cs` | Indirect — exercised via `PoolTests.cs` (`Pool.GetAddress`) | ported |
 | `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` | Yes — `EncodeRouteToPathTests.cs` (12 cases) | ported |
