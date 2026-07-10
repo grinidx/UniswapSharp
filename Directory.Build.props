@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Do not pack anything unless a project opts in -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>
