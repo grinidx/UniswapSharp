@@ -80,7 +80,21 @@ public class CurrencyAmount<T> : Fraction, IEquatable<CurrencyAmount<T>> where T
 
     public string ToExact(string format = "0.#############################")
     {
-        return ((decimal)Quotient / (decimal)DecimalScale).ToString(format, CultureInfo.InvariantCulture);
+        // Exact decimal representation of Quotient / DecimalScale computed with
+        // BigInteger (Decimal.js parity). The previous `(decimal)` cast overflowed
+        // System.Decimal (~7.9e28) for large token amounts.
+        BigInteger integerPart = BigInteger.DivRem(Quotient, DecimalScale, out BigInteger remainder);
+        if (remainder.IsZero)
+        {
+            return integerPart.ToString(CultureInfo.InvariantCulture);
+        }
+
+        string fractional = BigInteger.Abs(remainder)
+            .ToString(CultureInfo.InvariantCulture)
+            .PadLeft(Currency.Decimals, '0')
+            .TrimEnd('0');
+
+        return integerPart.ToString(CultureInfo.InvariantCulture) + "." + fractional;
     }
 
     public CurrencyAmount<BaseCurrency>? AsBaseCurrency() => new(this.Currency, Numerator, Denominator)
