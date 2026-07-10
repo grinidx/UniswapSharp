@@ -99,15 +99,31 @@ File mapping for the outstanding stubs (paths relative to `sdks/v3-sdk/src/` ups
 
 ## Outstanding work
 
-1. **`CurrencyAmount.ToExact` trailing-zero formatting** - FIXED; Phase B hardens it test-first
-   against the full upstream `CurrencyAmount` suite.
+Phase A (repository foundations) is complete: .NET 10, CI with PR reporting/coverage/CodeQL/Dependabot,
+branch protection + security hardening, community-health files, docs, and NuGet packaging are all in
+place. Remaining work is **Phase B** (V3 feature-parity port) and beyond.
+
+1. **Phase B — first pass: dependency-update sweep (test-verified).** Six major dependency bumps were
+   deferred from Phase A because they need per-change verification, not a blind merge. Do these **first**
+   in Phase B, each behind a green suite — and for runtime deps, with numeric parity checked to the digit:
+   - **Runtime (protocol-math critical — verify numeric parity):**
+     - `Nethereum.ABI` / `.Contracts` / `.Util` / `.Web3`: `4.21.4` → `6.x` (ABI encoding, address/keccak)
+     - `ExtendedNumerics.BigRational`: `2023.1000.2.328` → `3000.x` (fraction/price arithmetic)
+   - **Test infrastructure (verify the suite runs green):**
+     - `coverlet.collector`: `6.0.2` → `10.x`
+     - `Microsoft.NET.Test.Sdk`: `17.11.0` → `18.x`
+     - `xunit.runner.visualstudio`: `2.8.2` → `3.x` (and consider the `xunit` v3 major)
+   - **CI:** bump `actions/setup-dotnet` to a Node-24 release to clear the remaining Node-20 deprecation
+     warning (`actions/checkout` is already on v7). Also correct the stale `# v4` version comments on the
+     Dependabot-merged action pins in `.github/workflows/_test.yml` (the SHAs are v7 but the comments read `# v4`).
 2. **Seven `NotImplementedException` stubs** - the calldata / action builders: `SwapQuoter`,
    `NonfungiblePositionManager`, `Payments` (three methods), plus `PositionLibrary.SubIn256`
    and `PriceTick`. Port from the upstream references in the table above, with tests.
-3. **NuGet packaging** - no package metadata yet (`PackageId`, version, description,
-   license, repository URL, README). Add it so the library can be published.
-4. **README + usage example** - DONE (see `README.md`, with a compile-verified quickstart and
-   `docs/PORTING.md`); keep it in sync as stubs are ported.
-5. **V4 (later phase)** - Uniswap V4 reuses V3's concentrated-liquidity math (ticks,
+3. **`CurrencyAmount.ToExact` hardening** - FIXED for the known case; Phase B hardens it test-first
+   against the full upstream `CurrencyAmount` suite.
+4. **NuGet packaging** - DONE (metadata, SourceLink, symbols, MinVer, tag-driven release). To publish,
+   add the `NUGET_API_KEY` secret and push a `v*` tag; `1.0.0` is reserved for V3-parity-complete.
+5. **README + usage example** - DONE (see `README.md` + `docs/PORTING.md`); keep in sync as stubs land.
+6. **V4 (later phase)** - Uniswap V4 reuses V3's concentrated-liquidity math (ticks,
    sqrt-price) and adds the singleton `PoolManager`, hooks and flash accounting. It is
    additive on top of this codebase, not a rewrite. Reference: `sdks/v4-sdk`.
