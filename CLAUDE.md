@@ -106,8 +106,8 @@ File mapping for the outstanding stubs (paths relative to `sdks/v3-sdk/src/` ups
    and `PriceTick`. Port from the upstream references in the table above, with tests.
 3. **NuGet packaging** - no package metadata yet (`PackageId`, version, description,
    license, repository URL, README). Add it so the library can be published.
-4. **README + usage example** - none yet; add a minimal "connect, load a pool, quote a swap"
-   walkthrough.
+4. **README + usage example** - DONE (see `README.md`, with a compile-verified quickstart and
+   `docs/PORTING.md`); keep it in sync as stubs are ported.
 5. **V4 (later phase)** - Uniswap V4 reuses V3's concentrated-liquidity math (ticks,
    sqrt-price) and adds the singleton `PoolManager`, hooks and flash accounting. It is
    additive on top of this codebase, not a rewrite. Reference: `sdks/v4-sdk`.
