@@ -1,22 +1,11 @@
-using Nethereum.Contracts;
-using Newtonsoft.Json.Linq;
+using Nethereum.ABI;
+using Nethereum.Hex.HexConvertors.Extensions;
+using static UniswapSharp.V3.Utils.AbiFunctionEncoder;
 
 namespace UniswapSharp.V3;
 
 public abstract class Multicall
 {
-    public static Contract INTERFACE;
-
-    static Multicall()
-    {
-        string jsonContent = System.IO.File.ReadAllText("IMulticall.json");
-        JObject jsonObject = JObject.Parse(jsonContent);
-        JArray abiArray = (JArray)jsonObject["abi"];
-        string abiString = abiArray.ToString();
-
-        // INTERFACE = new Contract(null, abiString);
-    }
-
     private Multicall() { }
 
     public static string EncodeMulticall(string calldata)
@@ -32,7 +21,7 @@ public abstract class Multicall
             return calldataList[0];
         }
 
-        var function = INTERFACE.GetFunction("multicall");
-        return function.GetData(calldataList);
+        var bytesArray = calldataList.Select(c => c.HexToByteArray()).ToArray();
+        return EncodeFunctionData("multicall(bytes[])", new ABIValue("bytes[]", bytesArray));
     }
 }
