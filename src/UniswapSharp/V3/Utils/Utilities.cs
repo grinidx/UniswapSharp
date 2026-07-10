@@ -11,7 +11,8 @@ public static class Utilities
     /// <returns>The hex encoded calldata</returns>
     public static string ToHex(BigInteger bigintIsh)
     {
-        string hex = bigintIsh.ToString("X");
+        // Upstream toHex uses bigInt.toString(16) — lowercase hex.
+        string hex = bigintIsh.ToString("X").ToLowerInvariant();
         if (hex.Length % 2 != 0)
         {
             hex = $"0{hex}";
