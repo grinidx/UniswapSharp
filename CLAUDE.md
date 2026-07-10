@@ -10,8 +10,8 @@ the V3 periphery contracts.
 
 - Target framework: **.NET 10** (`net10.0`)
 - V3 core (entities + math) is implemented and unit-tested
-- 194 xUnit v3 tests; all passing (see Outstanding work)
-- A handful of calldata / action-builder methods remain stubbed with `NotImplementedException`
+- 268 xUnit v3 tests; all passing (see Outstanding work)
+- All calldata / action-builder stubs are now implemented and test-covered (no `NotImplementedException` left)
 - Not yet packaged or published to NuGet
 
 ## Layout
@@ -116,9 +116,13 @@ place. Remaining work is **Phase B** (V3 feature-parity port) and beyond.
    - **CI:** `actions/setup-dotnet` → `v5.4.0` (node24) across all workflows to clear the Node-20
      deprecation, stale `# v4`/`# v2`/`# v3` action version comments corrected, and `codeql-action/analyze`
      aligned to `init` at v4.37.0 (#26).
-2. **Seven `NotImplementedException` stubs** - the calldata / action builders: `SwapQuoter`,
-   `NonfungiblePositionManager`, `Payments` (three methods), plus `PositionLibrary.SubIn256`
-   and `PriceTick`. Port from the upstream references in the table above, with tests.
+2. **Seven `NotImplementedException` stubs** - DONE. All ported test-first (upstream `.test.ts`
+   cases, calldata matched to the digit): `PositionLibrary.SubIn256` (#32), `PriceTick` (#34),
+   `Payments` (#35), `SwapQuoter` (#36), and `NonfungiblePositionManager` (create/add #39,
+   collect/remove #40, safeTransferFrom/getPermitData #41). Along the way this also fixed
+   `EncodeRouteToPath` (#31) and `Multicall.EncodeMulticall` (#37), which were broken at runtime,
+   and added the `Position.MintAmountsWithSlippage` prerequisite (#38). `grep -r
+   NotImplementedException src/` is now empty.
 3. **`CurrencyAmount.ToExact` hardening** - FIXED for the known case; Phase B hardens it test-first
    against the full upstream `CurrencyAmount` suite.
 4. **NuGet packaging** - DONE (metadata, SourceLink, symbols, MinVer, tag-driven release). To publish,
