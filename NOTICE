@@ -1,0 +1,8 @@
+UniswapSharp
+Copyright (c) 2024-2026 Diffused Networks
+
+This product is a derivative work — a C#/.NET port of the official Uniswap SDKs
+(https://github.com/Uniswap/sdks), specifically the @uniswap/sdk-core and @uniswap/v3-sdk
+packages, which are licensed under the MIT License, Copyright (c) 2021 Uniswap Labs.
+
+UniswapSharp is not affiliated with, endorsed by, or sponsored by Uniswap Labs.

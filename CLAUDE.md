@@ -8,9 +8,9 @@ the V3 periphery contracts.
 
 ## Project status
 
-- Target framework: **.NET 8** (`net8.0`)
+- Target framework: **.NET 10** (`net10.0`)
 - V3 core (entities + math) is implemented and unit-tested
-- ~194 xUnit tests; all passing except one known cosmetic failure (see Outstanding work)
+- 194 xUnit tests; all passing (see Outstanding work)
 - A handful of calldata / action-builder methods remain stubbed with `NotImplementedException`
 - Not yet packaged or published to NuGet
 
@@ -39,16 +39,11 @@ dotnet build -c Release
 dotnet test  -c Release
 ```
 
-The projects target `net8.0`. If only a newer .NET runtime is installed, the test host
-can fail to launch ("You must install or update .NET"). Roll forward onto the installed
-runtime rather than installing an older one:
+The projects target `net10.0` and require the .NET 10 SDK; no `DOTNET_ROLL_FORWARD` is needed.
 
-```bash
-DOTNET_ROLL_FORWARD=LatestMajor dotnet test -c Release
-```
-
-CI (`.github/workflows/_test.yml`) restores, builds in Release, runs the tests and
-publishes a coverage report.
+CI (`.github/workflows/ci.yml`, which calls the reusable `_test.yml`) restores, builds in
+Release, and runs the tests on ubuntu/windows/macos — publishing a PR test-result check, a
+coverage comment, and a `$GITHUB_STEP_SUMMARY` table. CodeQL runs via `codeql.yml`.
 
 ## Dependencies
 
@@ -89,18 +84,30 @@ File mapping for the outstanding stubs (paths relative to `sdks/v3-sdk/src/` ups
 - Amounts and prices flow through the `Fraction` types - keep floating point out of protocol math.
 - Work on a branch, keep commits small, and run the tests before each commit.
 
+## Software-engineering process (required)
+
+- **Always use PRs.** Branch off `main` (`feat/…`, `fix/…`, `chore/…`, `docs/…`, `ci/…`, `test/…`),
+  small Conventional-Commit commits, PR into `main`, CI green, squash-merge, linear history.
+  Never push directly to `main`.
+- **Test-first, always.** Port/write the failing test before the implementation. Keep the suite
+  green (`dotnet test -c Release`).
+- **Match upstream to the digit.** `BigInteger`/`BigRational` only; never floating point in
+  protocol math. See [docs/PORTING.md](docs/PORTING.md) for the mapping + methodology.
+- **Definition of done (ported module):** upstream `.ts` + `.test.ts` ported and green;
+  `docs/PORTING.md` row updated; `dotnet format --verify-no-changes` clean; CI green.
+- Full contributor guide: [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Outstanding work
 
-1. **One failing test** - `CurrencyAmountTests.ToExact_IsCorrectFor18Decimals`. The value
-   is correct; `CurrencyAmount.ToExact()` does not trim trailing zeros
-   (`"0.001230000000000000"` vs `"0.00123"`). Formatting fix only.
+1. **`CurrencyAmount.ToExact` trailing-zero formatting** - FIXED; Phase B hardens it test-first
+   against the full upstream `CurrencyAmount` suite.
 2. **Seven `NotImplementedException` stubs** - the calldata / action builders: `SwapQuoter`,
    `NonfungiblePositionManager`, `Payments` (three methods), plus `PositionLibrary.SubIn256`
    and `PriceTick`. Port from the upstream references in the table above, with tests.
 3. **NuGet packaging** - no package metadata yet (`PackageId`, version, description,
    license, repository URL, README). Add it so the library can be published.
-4. **README + usage example** - none yet; add a minimal "connect, load a pool, quote a swap"
-   walkthrough.
+4. **README + usage example** - DONE (see `README.md`, with a compile-verified quickstart and
+   `docs/PORTING.md`); keep it in sync as stubs are ported.
 5. **V4 (later phase)** - Uniswap V4 reuses V3's concentrated-liquidity math (ticks,
    sqrt-price) and adds the singleton `PoolManager`, hooks and flash accounting. It is
    additive on top of this codebase, not a rewrite. Reference: `sdks/v4-sdk`.
