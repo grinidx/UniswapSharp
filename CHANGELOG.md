@@ -10,5 +10,10 @@ All notable changes to this project are documented here. The format is based on
 - Repository foundations: CI with PR test reporting + coverage, CodeQL, Dependabot,
   community-health files, contributor & porting guides, NuGet packaging.
 
+### Changed
+- Test assertions migrated from FluentAssertions to **AwesomeAssertions** (Apache-2.0
+  community fork) to avoid FluentAssertions v8's commercial license. Test-only; no
+  effect on the shipped package.
+
 ### Fixed
 - `CurrencyAmount.ToExact()` now honours its format string (trims trailing zeros).

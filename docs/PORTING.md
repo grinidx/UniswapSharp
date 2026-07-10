@@ -18,7 +18,7 @@
 | Decimal.js-backed `Fraction` | `Fraction` / `BigRational` (exact) |
 | `invariant(cond, msg)` | guard clause throwing (e.g. `ArgumentException`) |
 | union/enum string types | C# `enum` (e.g. `FeeAmount`) |
-| `*.test.ts` (mocha/jest) | xUnit `[Fact]`/`[Theory]` + FluentAssertions |
+| `*.test.ts` (mocha/jest) | xUnit `[Fact]`/`[Theory]` + AwesomeAssertions |
 | named exports (camelCase) | public members (PascalCase) |
 **Rule:** never use floating point in protocol math; match upstream numeric output to the digit.
 
