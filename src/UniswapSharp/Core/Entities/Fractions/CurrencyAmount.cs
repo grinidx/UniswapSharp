@@ -80,7 +80,7 @@ public class CurrencyAmount<T> : Fraction, IEquatable<CurrencyAmount<T>> where T
 
     public string ToExact(string format = "0.#############################")
     {
-        return ((decimal)Quotient / (decimal)DecimalScale).ToString("F"+ Currency.Decimals, CultureInfo.InvariantCulture);
+        return ((decimal)Quotient / (decimal)DecimalScale).ToString(format, CultureInfo.InvariantCulture);
     }
 
     public CurrencyAmount<BaseCurrency>? AsBaseCurrency() => new(this.Currency, Numerator, Denominator)

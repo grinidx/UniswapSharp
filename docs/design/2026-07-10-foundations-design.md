@@ -75,6 +75,7 @@ good test reporting, locked-down open-source configuration, strong docs, and NuG
 | 6 | PR granularity | **~5 focused PRs** |
 | 7 | Extras | **CodeQL + cross-platform matrix + CHANGELOG + FUNDING.yml** |
 | 8 | License | **Stay MIT**, add Uniswap Labs attribution (derivative work) |
+| 9 | Target framework | **Retarget `net8.0` → `net10.0`** (latest .NET, per directive; validated green, removes the `DOTNET_ROLL_FORWARD` workaround). Folded into PR-1. Single-target; multi-targeting `net8.0;net10.0` is a possible future option if broader consumer reach is wanted. |
 
 ## 4. Detailed design
 
@@ -105,7 +106,7 @@ verify before on-chain use" disclaimer. The exact example is validated by compil
 - **`ci.yml`** (caller): triggers on `push` to `main`, `pull_request` to `main`, and manual dispatch;
   `concurrency` cancels in-progress runs for the same ref; top-level `permissions: contents: read`.
 - **`_test.yml`** (reusable) fixes: remove the `PinguApps` filter; correct/simplify coverage;
-  `setup-dotnet` installs 8.0 (no roll-forward needed in CI); **cross-platform matrix**
+  `setup-dotnet` installs 10.0; **cross-platform matrix**
   (`ubuntu-latest`, `windows-latest`, `macos-latest`).
 - **Reporting (self-contained):**
   - `dotnet test --logger trx --logger GitHubActions` — the GitHub Actions logger annotates failing
@@ -186,7 +187,7 @@ Ordering respects dependencies (CI must exist before branch protection requires 
    verified via `dotnet pack` + package inspection.
 
 ## 6. Verification (Phase A definition of done)
-- `DOTNET_ROLL_FORWARD=LatestMajor dotnet test -c Release` → **all green** (194/194 after `ToExact`).
+- `dotnet test -c Release` → **all green** (194/194 after `ToExact`), building on `net10.0`.
 - `dotnet format --verify-no-changes` → clean.
 - `dotnet pack -c Release` → valid `.nupkg` + `.snupkg` with README, XML docs, and symbols.
 - A real PR visibly renders the **test-result check + coverage comment + step summary**.
