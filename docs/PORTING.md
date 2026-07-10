@@ -40,7 +40,7 @@
 | `nonfungiblePositionManager.ts` | `NonfungiblePositionManager.cs` | Yes — create/add/collect/remove/safeTransferFrom/getPermitData tests | ported |
 | `payments.ts` | `Payments.cs` | Yes — `V3/PaymentsTests.cs` (5 cases) | ported |
 | `quoter.ts` | `SwapQuoter.cs` | Yes — `V3/SwapQuoterTests.cs` (7 cases, V1 + QuoterV2) | ported |
-| `selfPermit.ts` | `SelfPermit.cs` | No dedicated test file | ported |
+| `selfPermit.ts` | `SelfPermit.cs` | Yes — `V3/SelfPermitTests.cs` (2 cases) | ported |
 | `staker.ts` | `Staker.cs` | No dedicated test file | ported |
 | `swapRouter.ts` | `SwapRouter.cs` | No dedicated test file | ported |
 | `utils/calldata.ts` | `Utils/Utilities.cs` (`ToHex`) | No dedicated test file | ported |
