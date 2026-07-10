@@ -45,7 +45,7 @@
 | `swapRouter.ts` | `SwapRouter.cs` | No dedicated test file | ported |
 | `utils/calldata.ts` | `Utils/Utilities.cs` (`ToHex`) | No dedicated test file | ported |
 | `utils/computePoolAddress.ts` | `Utils/ComputePoolAddress.cs` | Indirect — exercised via `PoolTests.cs` (`Pool.GetAddress`) | ported |
-| `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` | No dedicated test file | ported |
+| `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` | Yes — `EncodeRouteToPathTests.cs` (12 cases) | ported |
 | `utils/encodeSqrtRatioX96.ts` | `Utils/EncodeSqrtRatioX96.cs` | Indirect — exercised via `PoolTests.cs` | ported |
 | `utils/fullMath.ts` | `Utils/FullMath.cs` | Indirect — exercised via `SqrtPriceMath`/`SwapMath` call sites in `PoolTests.cs`/`TradeTests.cs` | ported |
 | `utils/index.ts` | *(n/a — barrel export)* | n/a | n/a |

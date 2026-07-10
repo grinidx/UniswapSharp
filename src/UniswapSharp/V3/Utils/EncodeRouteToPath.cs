@@ -17,7 +17,7 @@ public static class EncodeRouteToPath
     /// <returns>The hex encoded path</returns>
     public static string Encode(Route<BaseCurrency, BaseCurrency> route, bool exactOutput)
     {
-        var firstInputToken = (Token)route.Input;
+        var firstInputToken = route.Input.Wrapped();
         var types = new List<string>();
         var path = new List<object>();
 
@@ -29,12 +29,12 @@ public static class EncodeRouteToPath
             if (i == 0)
             {
                 types.AddRange(new[] { "address", "uint24", "address" });
-                path.AddRange(new object[] { firstInputToken.Address, pool.Fee, outputToken.Address });
+                path.AddRange(new object[] { firstInputToken.Address, (int)pool.Fee, outputToken.Address });
             }
             else
             {
                 types.AddRange(new[] { "uint24", "address" });
-                path.AddRange(new object[] { pool.Fee, outputToken.Address });
+                path.AddRange(new object[] { (int)pool.Fee, outputToken.Address });
             }
 
             firstInputToken = outputToken;
@@ -47,6 +47,14 @@ public static class EncodeRouteToPath
             path.Reverse();
         }
 
-        return abiEncoder.GetABIEncoded(types.ToArray(), path.ToArray()).ToHex(true);
+        // Upstream uses ethers' `pack` (Solidity encodePacked): tightly packed,
+        // no 32-byte padding — address is 20 bytes, uint24 is 3 bytes.
+        var abiValues = new ABIValue[types.Count];
+        for (int i = 0; i < types.Count; i++)
+        {
+            abiValues[i] = new ABIValue(types[i], path[i]);
+        }
+
+        return abiEncoder.GetABIEncodedPacked(abiValues).ToHex(true);
     }
 }
