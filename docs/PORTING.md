@@ -69,9 +69,10 @@ named gap; **stub** = throws `NotImplementedException`; **test-ported** = the up
 math is only indirectly covered today and would benefit from dedicated `*Tests.cs` files ported test-first).
 
 ### Outstanding stubs (Phase B)
-| C# file | Upstream reference |
-|---|---|
-| `V3/NonfungiblePositionManager.cs` | `nonfungiblePositionManager.ts` |
+None — all seven original `NotImplementedException` stubs are ported test-first
+(`PositionLibrary.SubIn256`, `PriceTick`, `Payments`, `SwapQuoter`, and
+`NonfungiblePositionManager`). Two latent runtime bugs uncovered along the way
+(`EncodeRouteToPath`, `Multicall.EncodeMulticall`) are fixed and test-covered.
 
 ## 5. Porting workflow (test-first)
 1. Read upstream `.ts` + `.test.ts`. 2. Port the test cases to xUnit; watch them fail.
