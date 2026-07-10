@@ -1,5 +1,6 @@
 using System.Numerics;
 using Nethereum.ABI;
+using Nethereum.Hex.HexConvertors.Extensions;
 using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.Core.Utils;
@@ -153,6 +154,152 @@ public class NonfungiblePositionManager
         {
             Calldata = Multicall.EncodeMulticall(calldatas),
             Value = Utilities.ToHex(value)
+        };
+    }
+
+    private static readonly BigInteger MaxUint128 = BigInteger.Pow(2, 128) - BigInteger.One;
+
+    public class CollectOptions
+    {
+        public BigInteger TokenId { get; set; }
+        public CurrencyAmount<BaseCurrency> ExpectedCurrencyOwed0 { get; set; }
+        public CurrencyAmount<BaseCurrency> ExpectedCurrencyOwed1 { get; set; }
+        public string Recipient { get; set; }
+    }
+
+    public class NFTPermitOptions
+    {
+        public byte V { get; set; }
+        public string R { get; set; }
+        public string S { get; set; }
+        public BigInteger Deadline { get; set; }
+        public string Spender { get; set; }
+    }
+
+    public class RemoveLiquidityOptions
+    {
+        public BigInteger TokenId { get; set; }
+        public Percent LiquidityPercentage { get; set; }
+        public Percent SlippageTolerance { get; set; }
+        public BigInteger Deadline { get; set; }
+        public bool BurnToken { get; set; }
+        public NFTPermitOptions? Permit { get; set; }
+        public CollectOptions CollectOptions { get; set; }
+    }
+
+    private static List<string> EncodeCollect(CollectOptions options)
+    {
+        var calldatas = new List<string>();
+
+        BigInteger tokenId = options.TokenId;
+        bool involvesETH = options.ExpectedCurrencyOwed0.Currency.IsNative || options.ExpectedCurrencyOwed1.Currency.IsNative;
+        string recipient = AddressValidator.ValidateAndParseAddress(options.Recipient);
+
+        // collect((uint256,address,uint128,uint128))
+        calldatas.Add(EncodeFunctionData("collect((uint256,address,uint128,uint128))",
+            new ABIValue("uint256", tokenId),
+            new ABIValue("address", involvesETH ? Constants.ADDRESS_ZERO : recipient),
+            new ABIValue("uint128", MaxUint128),
+            new ABIValue("uint128", MaxUint128)));
+
+        if (involvesETH)
+        {
+            BigInteger ethAmount = options.ExpectedCurrencyOwed0.Currency.IsNative
+                ? options.ExpectedCurrencyOwed0.Quotient
+                : options.ExpectedCurrencyOwed1.Quotient;
+            Token token = (Token)(options.ExpectedCurrencyOwed0.Currency.IsNative
+                ? options.ExpectedCurrencyOwed1.Currency
+                : options.ExpectedCurrencyOwed0.Currency);
+            BigInteger tokenAmount = options.ExpectedCurrencyOwed0.Currency.IsNative
+                ? options.ExpectedCurrencyOwed1.Quotient
+                : options.ExpectedCurrencyOwed0.Quotient;
+
+            calldatas.Add(Payments.EncodeUnwrapWETH9(ethAmount, recipient));
+            calldatas.Add(Payments.EncodeSweepToken(token, tokenAmount, recipient));
+        }
+
+        return calldatas;
+    }
+
+    public static MethodParameters CollectCallParameters(CollectOptions options)
+    {
+        var calldatas = EncodeCollect(options);
+
+        return new MethodParameters
+        {
+            Calldata = Multicall.EncodeMulticall(calldatas),
+            Value = Utilities.ToHex(BigInteger.Zero)
+        };
+    }
+
+    public static MethodParameters RemoveCallParameters(Position position, RemoveLiquidityOptions options)
+    {
+        var calldatas = new List<string>();
+
+        BigInteger deadline = options.Deadline;
+        BigInteger tokenId = options.TokenId;
+
+        // construct a partial position with a percentage of liquidity
+        BigInteger partialLiquidity = options.LiquidityPercentage.Multiply(position.Liquidity).Quotient;
+        var partialPosition = new Position(position.Pool, position.TickLower, position.TickUpper, partialLiquidity);
+        if (partialPosition.Liquidity <= BigInteger.Zero)
+        {
+            throw new InvalidOperationException("ZERO_LIQUIDITY");
+        }
+
+        // slippage-adjusted underlying amounts
+        var (amount0Min, amount1Min) = partialPosition.BurnAmountsWithSlippage(options.SlippageTolerance);
+
+        if (options.Permit != null)
+        {
+            calldatas.Add(EncodeFunctionData("permit(address,uint256,uint256,uint8,bytes32,bytes32)",
+                new ABIValue("address", AddressValidator.ValidateAndParseAddress(options.Permit.Spender)),
+                new ABIValue("uint256", tokenId),
+                new ABIValue("uint256", options.Permit.Deadline),
+                new ABIValue("uint8", options.Permit.V),
+                new ABIValue("bytes32", options.Permit.R.HexToByteArray()),
+                new ABIValue("bytes32", options.Permit.S.HexToByteArray())));
+        }
+
+        // remove liquidity: decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))
+        calldatas.Add(EncodeFunctionData("decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
+            new ABIValue("uint256", tokenId),
+            new ABIValue("uint128", partialPosition.Liquidity),
+            new ABIValue("uint256", amount0Min),
+            new ABIValue("uint256", amount1Min),
+            new ABIValue("uint256", deadline)));
+
+        var collectOpts = options.CollectOptions;
+        var owed0 = collectOpts.ExpectedCurrencyOwed0;
+        var owed1 = collectOpts.ExpectedCurrencyOwed1;
+        calldatas.AddRange(EncodeCollect(new CollectOptions
+        {
+            TokenId = tokenId,
+            // add the underlying value to the expected currency already owed
+            ExpectedCurrencyOwed0 = owed0.Add(CurrencyAmount<BaseCurrency>.FromRawAmount(owed0.Currency, amount0Min)),
+            ExpectedCurrencyOwed1 = owed1.Add(CurrencyAmount<BaseCurrency>.FromRawAmount(owed1.Currency, amount1Min)),
+            Recipient = collectOpts.Recipient
+        }));
+
+        if (options.LiquidityPercentage.Equals(new Percent(1)))
+        {
+            if (options.BurnToken)
+            {
+                calldatas.Add(EncodeFunctionData("burn(uint256)", new ABIValue("uint256", tokenId)));
+            }
+        }
+        else
+        {
+            if (options.BurnToken)
+            {
+                throw new InvalidOperationException("CANNOT_BURN");
+            }
+        }
+
+        return new MethodParameters
+        {
+            Calldata = Multicall.EncodeMulticall(calldatas),
+            Value = Utilities.ToHex(BigInteger.Zero)
         };
     }
 }
