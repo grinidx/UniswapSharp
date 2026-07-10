@@ -10,7 +10,7 @@ the V3 periphery contracts.
 
 - Target framework: **.NET 8** (`net8.0`)
 - V3 core (entities + math) is implemented and unit-tested
-- ~194 xUnit tests; all passing except one known cosmetic failure (see Outstanding work)
+- 194 xUnit tests; all passing (see Outstanding work)
 - A handful of calldata / action-builder methods remain stubbed with `NotImplementedException`
 - Not yet packaged or published to NuGet
 
@@ -89,11 +89,23 @@ File mapping for the outstanding stubs (paths relative to `sdks/v3-sdk/src/` ups
 - Amounts and prices flow through the `Fraction` types - keep floating point out of protocol math.
 - Work on a branch, keep commits small, and run the tests before each commit.
 
+## Software-engineering process (required)
+
+- **Always use PRs.** Branch off `main` (`feat/…`, `fix/…`, `chore/…`, `docs/…`, `ci/…`, `test/…`),
+  small Conventional-Commit commits, PR into `main`, CI green, squash-merge, linear history.
+  Never push directly to `main`.
+- **Test-first, always.** Port/write the failing test before the implementation. Keep the suite
+  green (`dotnet test -c Release`).
+- **Match upstream to the digit.** `BigInteger`/`BigRational` only; never floating point in
+  protocol math. See [docs/PORTING.md](docs/PORTING.md) for the mapping + methodology.
+- **Definition of done (ported module):** upstream `.ts` + `.test.ts` ported and green;
+  `docs/PORTING.md` row updated; `dotnet format --verify-no-changes` clean; CI green.
+- Full contributor guide: [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Outstanding work
 
-1. **One failing test** - `CurrencyAmountTests.ToExact_IsCorrectFor18Decimals`. The value
-   is correct; `CurrencyAmount.ToExact()` does not trim trailing zeros
-   (`"0.001230000000000000"` vs `"0.00123"`). Formatting fix only.
+1. **`CurrencyAmount.ToExact` trailing-zero formatting** - FIXED; Phase B hardens it test-first
+   against the full upstream `CurrencyAmount` suite.
 2. **Seven `NotImplementedException` stubs** - the calldata / action builders: `SwapQuoter`,
    `NonfungiblePositionManager`, `Payments` (three methods), plus `PositionLibrary.SubIn256`
    and `PriceTick`. Port from the upstream references in the table above, with tests.
