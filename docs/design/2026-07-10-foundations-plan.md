@@ -251,7 +251,6 @@ jobs:
         run: >
           dotnet test -c Release --no-build
           --logger "trx;LogFileName=test-results.trx"
-          --logger "GitHubActions"
           --results-directory ${{ github.workspace }}/TestResults
           --collect:"XPlat Code Coverage"
 

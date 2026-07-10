@@ -109,10 +109,10 @@ verify before on-chain use" disclaimer. The exact example is validated by compil
   `setup-dotnet` installs 10.0; **cross-platform matrix**
   (`ubuntu-latest`, `windows-latest`, `macos-latest`).
 - **Reporting (self-contained):**
-  - `dotnet test --logger trx --logger GitHubActions` — the GitHub Actions logger annotates failing
-    tests inline on the PR diff.
-  - `EnricoMi/publish-unit-test-result-action` — a check + PR comment with pass/fail/skip counts and
-    a list of failing tests (now actually fires because we add the `pull_request` trigger).
+  - `dotnet test --logger trx` — TRX results (the built-in `GitHubActions` logger was dropped: it
+    needs a separate NuGet package, and the publish action below already annotates failures).
+  - `EnricoMi/publish-unit-test-result-action` — a check + PR comment with pass/fail/skip counts,
+    a list of failing tests, and inline failure annotations (fires because we add the `pull_request` trigger).
   - Coverage via coverlet → ReportGenerator → `irongut/CodeCoverageSummary` → sticky PR comment
     (`marocchino/sticky-pull-request-comment`).
   - A results + coverage table written to **`$GITHUB_STEP_SUMMARY`** so *every* run (not only PRs)
