@@ -8,7 +8,7 @@ the V3 periphery contracts.
 
 ## Project status
 
-- Target framework: **.NET 8** (`net8.0`)
+- Target framework: **.NET 10** (`net10.0`)
 - V3 core (entities + math) is implemented and unit-tested
 - 194 xUnit tests; all passing (see Outstanding work)
 - A handful of calldata / action-builder methods remain stubbed with `NotImplementedException`
@@ -39,16 +39,11 @@ dotnet build -c Release
 dotnet test  -c Release
 ```
 
-The projects target `net8.0`. If only a newer .NET runtime is installed, the test host
-can fail to launch ("You must install or update .NET"). Roll forward onto the installed
-runtime rather than installing an older one:
+The projects target `net10.0` and require the .NET 10 SDK; no `DOTNET_ROLL_FORWARD` is needed.
 
-```bash
-DOTNET_ROLL_FORWARD=LatestMajor dotnet test -c Release
-```
-
-CI (`.github/workflows/_test.yml`) restores, builds in Release, runs the tests and
-publishes a coverage report.
+CI (`.github/workflows/ci.yml`, which calls the reusable `_test.yml`) restores, builds in
+Release, and runs the tests on ubuntu/windows/macos — publishing a PR test-result check, a
+coverage comment, and a `$GITHUB_STEP_SUMMARY` table. CodeQL runs via `codeql.yml`.
 
 ## Dependencies
 
