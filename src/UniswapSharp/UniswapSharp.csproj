@@ -30,9 +30,9 @@
 
   <ItemGroup>
     <PackageReference Include="ExtendedNumerics.BigRational" Version="2023.1000.2.328" />
-    <PackageReference Include="Nethereum.ABI" Version="4.21.4" />
-    <PackageReference Include="Nethereum.Contracts" Version="4.21.4" />
-    <PackageReference Include="Nethereum.Util" Version="4.21.4" />
+    <PackageReference Include="Nethereum.ABI" Version="6.1.0" />
+    <PackageReference Include="Nethereum.Contracts" Version="6.1.0" />
+    <PackageReference Include="Nethereum.Util" Version="6.1.0" />
     <PackageReference Include="Nethereum.Web3" Version="4.21.4" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
