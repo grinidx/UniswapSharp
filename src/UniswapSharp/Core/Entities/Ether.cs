@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 namespace UniswapSharp.Core.Entities;
 
 public class Ether : NativeCurrency
@@ -13,16 +15,14 @@ public class Ether : NativeCurrency
 
     }
 
-    private static Dictionary<int, Ether> _etherCache = new Dictionary<int, Ether>();
+    // ConcurrentDictionary: xUnit runs test classes in parallel and callers may
+    // resolve Ether concurrently; a plain Dictionary races on write (torn state /
+    // duplicate instances) and breaks the reference-stable singleton contract.
+    private static readonly ConcurrentDictionary<int, Ether> _etherCache = new();
 
     public static Ether OnChain(int chainId)
     {
-        if (!_etherCache.TryGetValue(chainId, out var ether))
-        {
-            ether = new Ether(chainId);
-            _etherCache[chainId] = ether;
-        }
-        return ether;
+        return _etherCache.GetOrAdd(chainId, static id => new Ether(id));
     }
 
     public override bool Equals(BaseCurrency other)
