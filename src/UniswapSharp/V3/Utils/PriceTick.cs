@@ -23,8 +23,8 @@ public static class PriceTick
         bool sorted = price.BaseCurrency.SortsBefore(price.QuoteCurrency);
 
         BigInteger sqrtRatioX96 = sorted
-            ? EncodeSqrtRatioX96(price.Numerator, price.Denominator)
-            : EncodeSqrtRatioX96(price.Denominator, price.Numerator);
+            ? EncodeSqrtRatioX96.Encode(price.Numerator, price.Denominator)
+            : EncodeSqrtRatioX96.Encode(price.Denominator, price.Numerator);
 
         int tick = TickMath.GetTickAtSqrtRatio(sqrtRatioX96);
         Price<Token, Token> nextTickPrice = TickToPrice(price.BaseCurrency, price.QuoteCurrency, tick + 1);
@@ -45,12 +45,5 @@ public static class PriceTick
         }
 
         return tick;
-    }
-
-    private static BigInteger EncodeSqrtRatioX96(BigInteger numerator, BigInteger denominator)
-    {
-        // Implementation of encodeSqrtRatioX96 function
-        // This is a placeholder and should be replaced with the actual implementation
-        throw new NotImplementedException();
     }
 }
