@@ -13,12 +13,27 @@ public abstract class Payments
 
     private Payments() { }
 
-    private static string EncodeFeeBips(Percent fee)
+    // Ethers' Interface.encodeFunctionData equivalent: 4-byte selector
+    // (keccak256 of the canonical signature) followed by the standard,
+    // 32-byte-padded ABI encoding of the arguments.
+    private static string EncodeFunctionData(string signature, params ABIValue[] parameters)
     {
-        return fee.Multiply(10_000).Quotient.ToHex(false);
+        string hash = Sha3Keccack.Current.CalculateHash(signature);
+        if (hash.StartsWith("0x"))
+        {
+            hash = hash.Substring(2);
+        }
+        string selector = hash.Substring(0, 8);
+        string encodedParams = parameters.Length == 0 ? string.Empty : INTERFACE.GetABIEncoded(parameters).ToHex();
+        return "0x" + selector + encodedParams;
     }
 
-    public static string EncodeUnwrapWETH9(BigInteger amountMinimum, string recipient, IFeeOptions feeOptions = null)
+    private static BigInteger EncodeFeeBips(Percent fee)
+    {
+        return fee.Multiply(10_000).Quotient;
+    }
+
+    public static string EncodeUnwrapWETH9(BigInteger amountMinimum, string recipient, IFeeOptions? feeOptions = null)
     {
         recipient = AddressUtil.Current.ConvertToChecksumAddress(recipient);
 
@@ -27,22 +42,19 @@ public abstract class Payments
             var feeBips = EncodeFeeBips(feeOptions.Fee);
             var feeRecipient = AddressUtil.Current.ConvertToChecksumAddress(feeOptions.Recipient);
 
-            //return INTERFACE.GetABIEncodedTransactionData("unwrapWETH9WithFee",
-            //    amountMinimum.ToHex(),
-            //    recipient,
-            //    feeBips,
-            //    feeRecipient);
+            return EncodeFunctionData("unwrapWETH9WithFee(uint256,address,uint256,address)",
+                new ABIValue("uint256", amountMinimum),
+                new ABIValue("address", recipient),
+                new ABIValue("uint256", feeBips),
+                new ABIValue("address", feeRecipient));
         }
-        else
-        {
-            //return INTERFACE.GetABIEncodedTransactionData("unwrapWETH9",
-            //    amountMinimum.ToHex(),
-            //    recipient);
-        }
-        throw new NotImplementedException();
+
+        return EncodeFunctionData("unwrapWETH9(uint256,address)",
+            new ABIValue("uint256", amountMinimum),
+            new ABIValue("address", recipient));
     }
 
-    public static string EncodeSweepToken(Token token, BigInteger amountMinimum, string recipient, IFeeOptions feeOptions = null)
+    public static string EncodeSweepToken(Token token, BigInteger amountMinimum, string recipient, IFeeOptions? feeOptions = null)
     {
         recipient = AddressUtil.Current.ConvertToChecksumAddress(recipient);
 
@@ -51,29 +63,25 @@ public abstract class Payments
             var feeBips = EncodeFeeBips(feeOptions.Fee);
             var feeRecipient = AddressUtil.Current.ConvertToChecksumAddress(feeOptions.Recipient);
 
-            //return INTERFACE.GetABIEncodedTransactionData("sweepTokenWithFee",
-            //    token.Address,
-            //    amountMinimum.ToHex(false),
-            //    recipient,
-            //    feeBips,
-            //    feeRecipient);
-        }
-        else
-        {
-            //return INTERFACE.GetABIEncodedTransactionData("sweepToken",
-            //    token.Address,
-            //    amountMinimum.ToHex(false),
-            //    recipient);
+            return EncodeFunctionData("sweepTokenWithFee(address,uint256,address,uint256,address)",
+                new ABIValue("address", token.Address),
+                new ABIValue("uint256", amountMinimum),
+                new ABIValue("address", recipient),
+                new ABIValue("uint256", feeBips),
+                new ABIValue("address", feeRecipient));
         }
 
-        throw new NotImplementedException();
+        return EncodeFunctionData("sweepToken(address,uint256,address)",
+            new ABIValue("address", token.Address),
+            new ABIValue("uint256", amountMinimum),
+            new ABIValue("address", recipient));
     }
 
     public static string EncodeRefundETH()
     {
-        //return INTERFACE.GetABIEncodedTransactionData("refundETH");
-        throw new NotImplementedException();
+        return EncodeFunctionData("refundETH()");
     }
+
     public interface IFeeOptions
     {
         Percent Fee { get; set; }
@@ -85,5 +93,4 @@ public abstract class Payments
         public Percent Fee { get; set; }
         public string Recipient { get; set; }
     }
-
 }
