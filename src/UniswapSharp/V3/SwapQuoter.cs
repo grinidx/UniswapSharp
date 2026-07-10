@@ -6,63 +6,57 @@ using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.V3.Entities;
 using UniswapSharp.V3.Utils;
+using static UniswapSharp.V3.Utils.AbiFunctionEncoder;
 
 namespace UniswapSharp.V3;
 
 public abstract class SwapQuoter
 {
-    public static ABIEncode V1INTERFACE = new ABIEncode(); // Initialize with IQuoter ABI
-    public static ABIEncode V2INTERFACE = new ABIEncode(); // Initialize with IQuoterV2 ABI
-
     public static NonfungiblePositionManager.MethodParameters QuoteCallParameters<TInput, TOutput>(
         Route<TInput, TOutput> route,
         CurrencyAmount<BaseCurrency> amount,
         TradeType tradeType,
-        QuoteOptions options = null) where TInput : BaseCurrency where TOutput : BaseCurrency
+        QuoteOptions? options = null) where TInput : BaseCurrency where TOutput : BaseCurrency
     {
-        options = options ?? new QuoteOptions();
+        options ??= new QuoteOptions();
         bool singleHop = route.Pools.Count == 1;
-        string quoteAmount = amount.Quotient.ToHex(false);
+        BigInteger quoteAmount = amount.Quotient;
         string calldata;
-        ABIEncode swapInterface = options.UseQuoterV2 ? V2INTERFACE : V1INTERFACE;
 
         if (singleHop)
         {
-            var baseQuoteParams = new
-            {
-                tokenIn = ((dynamic)route.TokenPath[0]).Address,
-                tokenOut = ((dynamic)route.TokenPath[1]).Address,
-                fee = (int)route.Pools[0].Fee,
-                sqrtPriceLimitX96 = (options.SqrtPriceLimitX96 ?? BigInteger.Zero).ToHex(false)
+            string tokenIn = route.TokenPath[0].Address;
+            string tokenOut = route.TokenPath[1].Address;
+            int fee = (int)route.Pools[0].Fee;
+            BigInteger sqrtPriceLimitX96 = options.SqrtPriceLimitX96 ?? BigInteger.Zero;
 
-            };
-
-            object quoteParams;
-            if (tradeType == TradeType.EXACT_INPUT)
+            if (options.UseQuoterV2)
             {
-                quoteParams = new
-                {
-                    baseQuoteParams.tokenIn,
-                    baseQuoteParams.tokenOut,
-                    baseQuoteParams.fee,
-                    baseQuoteParams.sqrtPriceLimitX96,
-                    amountIn = quoteAmount
-                };
+                // QuoterV2 takes a single struct argument. Its members are all static,
+                // so the tuple encodes as its fields concatenated — identical bytes to a
+                // flat encoding — while the tuple signature drives a distinct selector.
+                string fn = tradeType == TradeType.EXACT_INPUT
+                    ? "quoteExactInputSingle((address,address,uint256,uint24,uint160))"
+                    : "quoteExactOutputSingle((address,address,uint256,uint24,uint160))";
+                calldata = EncodeFunctionData(fn,
+                    new ABIValue("address", tokenIn),
+                    new ABIValue("address", tokenOut),
+                    new ABIValue("uint256", quoteAmount),
+                    new ABIValue("uint24", fee),
+                    new ABIValue("uint160", sqrtPriceLimitX96));
             }
             else
             {
-                quoteParams = new
-                {
-                    baseQuoteParams.tokenIn,
-                    baseQuoteParams.tokenOut,
-                    baseQuoteParams.fee,
-                    baseQuoteParams.sqrtPriceLimitX96,
-                    amount = quoteAmount
-                };
+                string fn = tradeType == TradeType.EXACT_INPUT
+                    ? "quoteExactInputSingle(address,address,uint24,uint256,uint160)"
+                    : "quoteExactOutputSingle(address,address,uint24,uint256,uint160)";
+                calldata = EncodeFunctionData(fn,
+                    new ABIValue("address", tokenIn),
+                    new ABIValue("address", tokenOut),
+                    new ABIValue("uint24", fee),
+                    new ABIValue("uint256", quoteAmount),
+                    new ABIValue("uint160", sqrtPriceLimitX96));
             }
-
-            string tradeTypeFunctionName = tradeType == TradeType.EXACT_INPUT ? "quoteExactInputSingle" : "quoteExactOutputSingle";
-            //calldata = swapInterface.GetFunctionEncoded(tradeTypeFunctionName, quoteParams);
         }
         else
         {
@@ -71,25 +65,21 @@ public abstract class SwapQuoter
                 throw new InvalidOperationException("MULTIHOP_PRICE_LIMIT");
             }
 
-            string path = EncodeRouteToPath(route, tradeType == TradeType.EXACT_OUTPUT);
-            string tradeTypeFunctionName = tradeType == TradeType.EXACT_INPUT ? "quoteExactInput" : "quoteExactOutput";
-            //calldata = swapInterface.GetFunctionEncoded(tradeTypeFunctionName, path, quoteAmount);
+            string path = EncodeRouteToPath.Encode(route, tradeType == TradeType.EXACT_OUTPUT);
+            string fn = tradeType == TradeType.EXACT_INPUT
+                ? "quoteExactInput(bytes,uint256)"
+                : "quoteExactOutput(bytes,uint256)";
+            calldata = EncodeFunctionData(fn,
+                new ABIValue("bytes", path.HexToByteArray()),
+                new ABIValue("uint256", quoteAmount));
         }
 
         return new NonfungiblePositionManager.MethodParameters
         {
-            //Calldata = calldata,
-            Value = BigInteger.Zero.ToHex(false)
+            Calldata = calldata,
+            Value = Utilities.ToHex(BigInteger.Zero)
         };
     }
-
-    private static string EncodeRouteToPath<TInput, TOutput>(Route<TInput, TOutput> route, bool exactOutput)
-        where TInput : BaseCurrency where TOutput : BaseCurrency
-    {
-        // Implement the encoding logic here
-        throw new NotImplementedException();
-    }
-
 
     public class QuoteOptions
     {

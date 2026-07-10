@@ -15,7 +15,8 @@ public static class EncodeRouteToPath
     /// <param name="route">The v3 path to convert to an encoded path</param>
     /// <param name="exactOutput">Whether the route should be encoded in reverse, for making exact output swaps</param>
     /// <returns>The hex encoded path</returns>
-    public static string Encode(Route<BaseCurrency, BaseCurrency> route, bool exactOutput)
+    public static string Encode<TInput, TOutput>(Route<TInput, TOutput> route, bool exactOutput)
+        where TInput : BaseCurrency where TOutput : BaseCurrency
     {
         var firstInputToken = route.Input.Wrapped();
         var types = new List<string>();

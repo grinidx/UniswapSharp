@@ -1,9 +1,9 @@
 using System.Numerics;
 using Nethereum.ABI;
-using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Util;
 using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
+using static UniswapSharp.V3.Utils.AbiFunctionEncoder;
 
 namespace UniswapSharp.V3;
 
@@ -12,21 +12,6 @@ public abstract class Payments
     public static ABIEncode INTERFACE = new ABIEncode();
 
     private Payments() { }
-
-    // Ethers' Interface.encodeFunctionData equivalent: 4-byte selector
-    // (keccak256 of the canonical signature) followed by the standard,
-    // 32-byte-padded ABI encoding of the arguments.
-    private static string EncodeFunctionData(string signature, params ABIValue[] parameters)
-    {
-        string hash = Sha3Keccack.Current.CalculateHash(signature);
-        if (hash.StartsWith("0x"))
-        {
-            hash = hash.Substring(2);
-        }
-        string selector = hash.Substring(0, 8);
-        string encodedParams = parameters.Length == 0 ? string.Empty : INTERFACE.GetABIEncoded(parameters).ToHex();
-        return "0x" + selector + encodedParams;
-    }
 
     private static BigInteger EncodeFeeBips(Percent fee)
     {
