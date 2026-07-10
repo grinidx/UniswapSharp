@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using UniswapSharp.Core.Utils;
 
 namespace UniswapSharp.Testing.Core.Utils;

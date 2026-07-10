@@ -32,6 +32,10 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore
 
+      - name: Format check
+        if: runner.os == 'Linux'
+        run: dotnet format UniswapSharp.sln --verify-no-changes
+
       - name: Test
         run: >
           dotnet test -c Release --no-build
@@ -45,7 +49,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@82082dac68ad6a19d980f8ce817e108b9f496c2a # v2.17.1
         with:
           check_name: "Test Results"
-          trx_files: "${{ github.workspace }}/TestResults/**/*.trx"
+          files: "${{ github.workspace }}/TestResults/**/*.trx"
 
       - name: Coverage report
         if: always() && runner.os == 'Linux'
@@ -54,6 +58,7 @@ jobs:
           reports: "${{ github.workspace }}/TestResults/**/coverage.cobertura.xml"
           targetdir: "${{ github.workspace }}/coveragereport"
           reporttypes: "Cobertura;MarkdownSummaryGithub"
+          assemblyfilters: "-UniswapSharp.Testing"
 
       - name: Write coverage to job summary
         if: always() && runner.os == 'Linux'

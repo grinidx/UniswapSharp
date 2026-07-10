@@ -25,7 +25,7 @@ src/UniswapSharp/
     Entities/        # Pool, Position, Route, Trade, Tick, TickListDataProvider, ...
     Utils/           # TickMath, SqrtPriceMath, SwapMath, FullMath, LiquidityMath, ...
     SwapRouter, SwapQuoter, NonfungiblePositionManager, Payments, Multicall, Staker, SelfPermit
-test/UniswapSharp.Testing/   # xUnit + FluentAssertions, mirrors the src tree
+test/UniswapSharp.Testing/   # xUnit + AwesomeAssertions, mirrors the src tree
 UniswapSharp.sln
 ```
 
@@ -50,7 +50,7 @@ coverage comment, and a `$GITHUB_STEP_SUMMARY` table. CodeQL runs via `codeql.ym
 - **Nethereum** (`Nethereum.ABI`, `.Contracts`, `.Util`, `.Web3`) - ABI encoding,
   contract calls, address / keccak utilities
 - **ExtendedNumerics.BigRational** - exact rational arithmetic for the fraction and price types
-- **xUnit** + **FluentAssertions** (test project only)
+- **xUnit** + **AwesomeAssertions** (test project only)
 
 ## Porting methodology
 
