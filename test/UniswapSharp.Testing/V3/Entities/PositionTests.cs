@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using UniswapSharp.Core.Entities;
+using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.V3.Entities;
 using UniswapSharp.V3.Utils;
 using static UniswapSharp.V3.Constants;
@@ -22,7 +23,63 @@ public class PositionTests
     private static readonly int TICK_SPACING = TICK_SPACINGS[FeeAmount.LOW];
     private static readonly Pool DAI_USDC_POOL = new Pool(DAI, USDC, FeeAmount.LOW, POOL_SQRT_RATIO_START, 0, POOL_TICK_CURRENT, new int[] { });
 
+    // Ported from position.test.ts #mintAmountsWithSlippage
+    private static readonly BigInteger LIQUIDITY_100E18 = BigInteger.Parse("100e18", NumberStyles.AllowExponent);
+    private static int Nut(int spacings) => NearestUsableTick.Find(POOL_TICK_CURRENT, TICK_SPACING) + spacings * TICK_SPACING;
 
+    [Fact]
+    public void MintAmountsWithSlippage_ZeroSlippage_Below()
+    {
+        var position = new Position(DAI_USDC_POOL, Nut(1), Nut(2), LIQUIDITY_100E18);
+        var (amount0, amount1) = position.MintAmountsWithSlippage(new Percent(0));
+        Assert.Equal(BigInteger.Parse("49949961958869841738198"), amount0);
+        Assert.Equal(BigInteger.Zero, amount1);
+    }
+
+    [Fact]
+    public void MintAmountsWithSlippage_ZeroSlippage_Above()
+    {
+        var position = new Position(DAI_USDC_POOL, Nut(-2), Nut(-1), LIQUIDITY_100E18);
+        var (amount0, amount1) = position.MintAmountsWithSlippage(new Percent(0));
+        Assert.Equal(BigInteger.Zero, amount0);
+        Assert.Equal(BigInteger.Parse("49970077053"), amount1);
+    }
+
+    [Fact]
+    public void MintAmountsWithSlippage_ZeroSlippage_Within()
+    {
+        var position = new Position(DAI_USDC_POOL, Nut(-2), Nut(2), LIQUIDITY_100E18);
+        var (amount0, amount1) = position.MintAmountsWithSlippage(new Percent(0));
+        Assert.Equal(BigInteger.Parse("120054069145287995740584"), amount0);
+        Assert.Equal(BigInteger.Parse("79831926243"), amount1);
+    }
+
+    [Fact]
+    public void MintAmountsWithSlippage_005Percent_Below()
+    {
+        var position = new Position(DAI_USDC_POOL, Nut(1), Nut(2), LIQUIDITY_100E18);
+        var (amount0, amount1) = position.MintAmountsWithSlippage(new Percent(5, 10000));
+        Assert.Equal(BigInteger.Parse("49949961958869841738198"), amount0);
+        Assert.Equal(BigInteger.Zero, amount1);
+    }
+
+    [Fact]
+    public void MintAmountsWithSlippage_005Percent_Above()
+    {
+        var position = new Position(DAI_USDC_POOL, Nut(-2), Nut(-1), LIQUIDITY_100E18);
+        var (amount0, amount1) = position.MintAmountsWithSlippage(new Percent(5, 10000));
+        Assert.Equal(BigInteger.Zero, amount0);
+        Assert.Equal(BigInteger.Parse("49970077053"), amount1);
+    }
+
+    [Fact]
+    public void MintAmountsWithSlippage_005Percent_Within()
+    {
+        var position = new Position(DAI_USDC_POOL, Nut(-2), Nut(2), LIQUIDITY_100E18);
+        var (amount0, amount1) = position.MintAmountsWithSlippage(new Percent(5, 10000));
+        Assert.Equal(BigInteger.Parse("95063440240746211432007"), amount0);
+        Assert.Equal(BigInteger.Parse("54828800461"), amount1);
+    }
 
     [Fact]
     public void CanBeConstructedAroundZeroTick()

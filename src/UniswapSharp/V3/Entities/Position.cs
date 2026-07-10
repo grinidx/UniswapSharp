@@ -183,7 +183,41 @@ public class Position
         return (amount0.Quotient, amount1.Quotient);
     }
 
+    // Ported from entities/position.ts (mintAmountsWithSlippage): the minimum
+    // amounts that must be sent to safely mint the position given slippage. Uses
+    // counterfactual pools at the slippage-adjusted bounds; amount0 is taken at the
+    // upper price and amount1 at the lower price (the smaller side of each).
+    public (BigInteger amount0, BigInteger amount1) MintAmountsWithSlippage(Percent slippageTolerance)
+    {
+        var (sqrtRatioX96Lower, sqrtRatioX96Upper) = RatiosAfterSlippage(slippageTolerance);
 
+        var poolLower = new Pool(
+            Pool.Token0,
+            Pool.Token1,
+            Pool.Fee,
+            sqrtRatioX96Lower,
+            0,
+            TickMath.GetTickAtSqrtRatio(sqrtRatioX96Lower)
+        );
+        var poolUpper = new Pool(
+            Pool.Token0,
+            Pool.Token1,
+            Pool.Fee,
+            sqrtRatioX96Upper,
+            0,
+            TickMath.GetTickAtSqrtRatio(sqrtRatioX96Upper)
+        );
+
+        // The router is imprecise, so compute the position that will actually be
+        // created from the (no-slippage) mint amounts passed as calldata.
+        var (mintAmount0, mintAmount1) = MintAmounts;
+        var positionThatWillBeCreated = FromAmounts(Pool, TickLower, TickUpper, mintAmount0, mintAmount1, false);
+
+        var amount0 = new Position(poolUpper, TickLower, TickUpper, positionThatWillBeCreated.Liquidity).MintAmounts.amount0;
+        var amount1 = new Position(poolLower, TickLower, TickUpper, positionThatWillBeCreated.Liquidity).MintAmounts.amount1;
+
+        return (amount0, amount1);
+    }
 
     public (BigInteger amount0, BigInteger amount1) MintAmounts
     {
