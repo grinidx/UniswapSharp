@@ -79,8 +79,10 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
 3. Implement until green, matching numbers to the digit. 4. Update the table above. 5. PR into `main`.
 
 ## 6. Intentional divergences
-- `CurrencyAmount.ToExact` formats via `decimal` + a .NET format string (invariant culture) rather
-  than Decimal.js `toFixed`. (Phase B will harden precision test-first.)
+- `CurrencyAmount.ToExact` now computes the exact decimal with `BigInteger` (integer part + zero-padded,
+  trailing-trimmed fractional part), matching Decimal.js. The earlier `(decimal)` cast overflowed
+  `System.Decimal` (~7.9e28) for large amounts; hardened test-first (`CurrencyAmountTests.cs`, incl. a
+  max-uint256 case).
 - _(append new entries as they arise)_
 
 ## 7. Re-syncing with upstream

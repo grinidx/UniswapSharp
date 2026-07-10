@@ -10,7 +10,7 @@ the V3 periphery contracts.
 
 - Target framework: **.NET 10** (`net10.0`)
 - V3 core (entities + math) is implemented and unit-tested
-- 268 xUnit v3 tests; all passing (see Outstanding work)
+- 292 xUnit v3 tests; all passing (see Outstanding work)
 - All calldata / action-builder stubs are now implemented and test-covered (no `NotImplementedException` left)
 - Not yet packaged or published to NuGet
 
@@ -123,8 +123,9 @@ place. Remaining work is **Phase B** (V3 feature-parity port) and beyond.
    `EncodeRouteToPath` (#31) and `Multicall.EncodeMulticall` (#37), which were broken at runtime,
    and added the `Position.MintAmountsWithSlippage` prerequisite (#38). `grep -r
    NotImplementedException src/` is now empty.
-3. **`CurrencyAmount.ToExact` hardening** - FIXED for the known case; Phase B hardens it test-first
-   against the full upstream `CurrencyAmount` suite.
+3. **`CurrencyAmount.ToExact` hardening** - DONE. Reimplemented with exact `BigInteger` arithmetic
+   (Decimal.js parity); the old `(decimal)` cast overflowed for large amounts. Hardened test-first,
+   incl. a max-uint256 case (`CurrencyAmountTests.cs`).
 4. **NuGet packaging** - DONE (metadata, SourceLink, symbols, MinVer, tag-driven release). To publish,
    add the `NUGET_API_KEY` secret and push a `v*` tag; `1.0.0` is reserved for V3-parity-complete.
 5. **README + usage example** - DONE (see `README.md` + `docs/PORTING.md`); keep in sync as stubs land.

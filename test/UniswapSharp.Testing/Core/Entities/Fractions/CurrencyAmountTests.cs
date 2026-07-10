@@ -143,5 +143,23 @@ public class CurrencyAmountTests
         var amount = CurrencyAmount<Token>.FromRawAmount(token, 123 * BigInteger.Pow(10, 13));
         Assert.Equal("0.00123", amount.ToExact());
     }
+
+    [Fact]
+    public void ToExact_IsExactForLargeAmounts()
+    {
+        // System.Decimal overflows at ~7.9e28; a max-uint256 token amount is ~1.15e77.
+        // ToExact must be exact (Decimal.js parity), computed with BigInteger.
+        var token = new Token(1, ADDRESS_ONE, 18);
+        var amount = CurrencyAmount<Token>.FromRawAmount(token, Constants.MaxUint256);
+        Assert.Equal("115792089237316195423570985008687907853269984665640564039457.584007913129639935", amount.ToExact());
+    }
+
+    [Fact]
+    public void ToExact_IsCorrectForWholeAmounts()
+    {
+        var token = new Token(1, ADDRESS_ONE, 18);
+        var amount = CurrencyAmount<Token>.FromRawAmount(token, 5 * BigInteger.Pow(10, 18));
+        Assert.Equal("5", amount.ToExact());
+    }
 }
 
