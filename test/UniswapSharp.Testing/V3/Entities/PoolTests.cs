@@ -7,8 +7,7 @@ using static UniswapSharp.V3.Constants;
 
 namespace UniswapSharp.Testing.V3.Entities;
 
-public class PoolTests(ITestOutputHelper output) :
-    XunitContextBase(output)
+public class PoolTests
 {
     private static readonly BigInteger ONE_ETHER = BigInteger.Pow(10, 18);
 

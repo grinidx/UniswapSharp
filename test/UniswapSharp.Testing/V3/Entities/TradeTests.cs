@@ -7,9 +7,6 @@ using UniswapSharp.V3.Entities;
 using UniswapSharp.V3.Utils;
 using Constants = UniswapSharp.V3.Constants;
 
-
-#pragma warning disable xUnit1048
-
 // ReSharper disable UnusedMember.Local
 
 namespace UniswapSharp.Testing.V3.Entities;
@@ -97,7 +94,7 @@ public class TradeTests
     }
 
     [Fact]
-    public async void FromRoute_CanBeConstructedWithEtherAsInput()
+    public async Task FromRoute_CanBeConstructedWithEtherAsInput()
     {
         var trade = await Trade<BaseCurrency, Token>.FromRoute(
             new Route<BaseCurrency, Token>([pool_weth_0], ETHER, token0),
@@ -109,7 +106,7 @@ public class TradeTests
     }
 
     [Fact]
-    public async void FromRoute_CanBeConstructedWithEtherAsInputForExactOutput()
+    public async Task FromRoute_CanBeConstructedWithEtherAsInputForExactOutput()
     {
         var trade = await Trade<BaseCurrency, Token>.FromRoute(
             new Route<BaseCurrency, Token>([pool_weth_0], ETHER, token0),
@@ -121,7 +118,7 @@ public class TradeTests
     }
 
     [Fact]
-    public async void FromRoute_CanBeConstructedWithEtherAsOutput()
+    public async Task FromRoute_CanBeConstructedWithEtherAsOutput()
     {
         var trade = await Trade<Token, BaseCurrency>.FromRoute(
             new Route<Token, BaseCurrency>([pool_weth_0], token0, ETHER),
@@ -133,7 +130,7 @@ public class TradeTests
     }
 
     [Fact]
-    public async void FromRoute_CanBeConstructedWithEtherAsOutputForExactInput()
+    public async Task FromRoute_CanBeConstructedWithEtherAsOutputForExactInput()
     {
         var trade = await Trade<Token, BaseCurrency>.FromRoute(
             new Route<Token, BaseCurrency>([pool_weth_0], token0, ETHER),
@@ -145,7 +142,7 @@ public class TradeTests
     }
 
     [Fact]
-    public async void FromRoutes_CanBeConstructedWithEtherAsInputWithMultipleRoutes()
+    public async Task FromRoutes_CanBeConstructedWithEtherAsInputWithMultipleRoutes()
     {
         var trade = await Trade<Ether, Token>.FromRoutes<Ether>(
             [
@@ -159,7 +156,7 @@ public class TradeTests
     }
 
     [Fact]
-    public async void FromRoutes_CanBeConstructedWithEtherAsInputForExactOutputWithMultipleRoutes()
+    public async Task FromRoutes_CanBeConstructedWithEtherAsInputForExactOutputWithMultipleRoutes()
     {
         var trade = await Trade<Ether, Token>.FromRoutes<Token>(
             [
@@ -176,7 +173,7 @@ public class TradeTests
     }
 
     [Fact]
-    public async void FromRoutes_CanBeConstructedWithEtherAsOutputWithMultipleRoutes()
+    public async Task FromRoutes_CanBeConstructedWithEtherAsOutputWithMultipleRoutes()
     {
         var trade = await Trade<BaseCurrency, BaseCurrency>.FromRoutes<Ether>(
             [
@@ -195,7 +192,7 @@ public class TradeTests
     }
 
     [Fact]
-    public async void FromRoutes_CanBeConstructedWithEtherAsOutputForExactInputWithMultipleRoutes()
+    public async Task FromRoutes_CanBeConstructedWithEtherAsOutputForExactInputWithMultipleRoutes()
     {
         var trade = await Trade<Token, Ether>.FromRoutes(
             [
@@ -214,7 +211,7 @@ public class TradeTests
     }
 
     [Fact]
-    public async void FromRoutes_ThrowsIfPoolsAreReUsedBetweenRoutes()
+    public async Task FromRoutes_ThrowsIfPoolsAreReUsedBetweenRoutes()
     {
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
