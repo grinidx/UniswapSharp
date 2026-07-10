@@ -1,7 +1,6 @@
 using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.Core.Utils;
-using Xunit.Abstractions;
 
 namespace UniswapSharp.Testing.Core.Utils;
 
