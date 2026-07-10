@@ -1,0 +1,18 @@
+name: Porting gap
+description: A module/behaviour that differs from or is missing vs upstream
+labels: [porting]
+body:
+  - type: input
+    id: module
+    attributes:
+      label: Upstream module
+      description: e.g. sdks/v3-sdk/src/utils/priceTickConversions.ts
+    validations:
+      required: true
+  - type: textarea
+    id: gap
+    attributes:
+      label: The gap
+      description: What upstream does vs what UniswapSharp does (with the failing value if numeric).
+    validations:
+      required: true

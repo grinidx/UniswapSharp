@@ -1,0 +1,24 @@
+name: Bug report
+description: Something is incorrect or crashes
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the smallest code snippet that reproduces it.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: UniswapSharp version / commit
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      description: If it's a numeric/parity issue, include the upstream value you expected.
+    validations:
+      required: true
