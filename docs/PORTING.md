@@ -38,7 +38,7 @@
 | `entities/trade.ts` | `Entities/Trade.cs` (+ `Entities/Swap.cs` helper DTO) | Yes — `V3/Entities/TradeTests.cs` | ported |
 | `multicall.ts` | `Multicall.cs` | No dedicated test file | ported |
 | `nonfungiblePositionManager.ts` | `NonfungiblePositionManager.cs` | No | **stub** — `NotImplementedException` |
-| `payments.ts` | `Payments.cs` | No | **partial** — 3 of its methods (`EncodeUnwrapWETH9`, `EncodeSweepToken`, `EncodeRefundETH`) throw `NotImplementedException` |
+| `payments.ts` | `Payments.cs` | Yes — `V3/PaymentsTests.cs` (5 cases) | ported |
 | `quoter.ts` | `SwapQuoter.cs` | No | **stub** — `NotImplementedException` |
 | `selfPermit.ts` | `SelfPermit.cs` | No dedicated test file | ported |
 | `staker.ts` | `Staker.cs` | No dedicated test file | ported |
@@ -73,7 +73,6 @@ math is only indirectly covered today and would benefit from dedicated `*Tests.c
 |---|---|
 | `V3/SwapQuoter.cs` | `quoter.ts` (+ `quoter.test.ts`) |
 | `V3/NonfungiblePositionManager.cs` | `nonfungiblePositionManager.ts` |
-| `V3/Payments.cs` | `payments.ts` |
 
 ## 5. Porting workflow (test-first)
 1. Read upstream `.ts` + `.test.ts`. 2. Port the test cases to xUnit; watch them fail.
