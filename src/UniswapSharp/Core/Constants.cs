@@ -26,7 +26,11 @@ public static class Constants
         ChainId.ZORA_SEPOLIA,
         ChainId.ROOTSTOCK,
         ChainId.BLAST,
-        ChainId.ZKSYNC
+        ChainId.ZKSYNC,
+        // NOTE: the remaining chains (CELO_ALFAJORES, BASE_SEPOLIA, WORLDCHAIN, UNICHAIN[_SEPOLIA],
+        // MONAD[_TESTNET], SONEIUM, XLAYER, LINEA, TEMPO, MEGAETH, ARC, ROBINHOOD, INK) are added
+        // together with their CHAIN_TO_ADDRESSES_MAP entries in the addresses.ts parity PR — the
+        // address dictionaries are built by iterating SUPPORTED_CHAINS, so the two must land together.
     };
 
     public static readonly Dictionary<string, string> NativeCurrencyName =
@@ -36,12 +40,63 @@ public static class Constants
         { "ETHER", "ETH" },
         { "MATIC", "MATIC" },
         { "CELO", "CELO" },
-        { "GNOSIS ", "XDAI" },
+        { "GNOSIS", "XDAI" },
         { "MOONBEAM", "GLMR" },
         { "BNB", "BNB" },
         { "AVAX", "AVAX" },
-        { "ROOTSTOCK ", "RBTC" },
+        { "ROOTSTOCK", "RBTC" },
     };
+
+    /// <summary>
+    /// Average block time in seconds, per chain. Fractional values are intentional for sub-second
+    /// chains. This is block-cadence metadata, not protocol math: upstream keys it on a JS number,
+    /// so <see cref="SecondsToBlocks"/> reproduces the same IEEE-double <c>ceil</c> division exactly.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<ChainId, double> AVERAGE_BLOCK_TIMES_SECONDS = new Dictionary<ChainId, double>
+    {
+        { ChainId.MAINNET, 12 },
+        { ChainId.OPTIMISM, 2 },
+        { ChainId.ARBITRUM_ONE, 0.25 },
+        { ChainId.POLYGON, 1.75 },
+        { ChainId.CELO, 1 },
+        { ChainId.BNB, 0.45 }, // post-Maxwell hardfork
+        { ChainId.AVALANCHE, 1 },
+        { ChainId.BASE, 2 },
+        { ChainId.ZORA, 2 },
+        { ChainId.BLAST, 2 },
+        { ChainId.WORLDCHAIN, 2 },
+        { ChainId.UNICHAIN, 1 },
+        { ChainId.SONEIUM, 2 },
+        { ChainId.MONAD, 0.4 },
+        { ChainId.XLAYER, 1 },
+        { ChainId.TEMPO, 0.5 },
+        { ChainId.MEGAETH, 1 },
+        { ChainId.ARC, 0.48 },
+        { ChainId.ROBINHOOD, 0.1 },
+        { ChainId.INK, 1 },
+    };
+
+    /// <summary>
+    /// Returns the average block time in seconds for a chain, throwing (rather than falling back
+    /// to a mainnet-shaped default) if the chain is not registered.
+    /// </summary>
+    public static double GetAverageBlockTimeSecs(ChainId chainId)
+    {
+        if (!AVERAGE_BLOCK_TIMES_SECONDS.TryGetValue(chainId, out double value))
+        {
+            throw new ArgumentException($"getAverageBlockTimeSecs: unsupported chainId {(int)chainId}; register it in chains.ts before use");
+        }
+        return value;
+    }
+
+    /// <summary>
+    /// Converts a wallclock duration in seconds to a block count for the given chain, rounding up
+    /// so the resulting window fully covers the requested time.
+    /// </summary>
+    public static int SecondsToBlocks(int seconds, ChainId chainId)
+    {
+        return (int)Math.Ceiling(seconds / GetAverageBlockTimeSecs(chainId));
+    }
 
 
 
