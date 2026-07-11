@@ -117,3 +117,28 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
 ## 7. Re-syncing with upstream
 Record the new upstream commit, `git -C /home/devops/uniswap-sdks-official log --oneline <old>..<new> -- sdks/v3-sdk sdks/sdk-core`,
 port the deltas test-first, and bump the pinned commit above.
+
+## 8. v4-sdk port (in progress)
+Reuses V3 concentrated-liquidity math; additive under `src/UniswapSharp/V4/` (tests under `test/UniswapSharp.Testing/V4/`).
+Dependency-ordered, test-first phases:
+
+| Upstream `sdks/v4-sdk/src/…` | UniswapSharp `src/UniswapSharp/V4/…` | Status |
+|---|---|---|
+| `internalConstants.ts` | `Constants.cs` (+ `PositionFunctions`) | ported |
+| `actionConstants.ts` | `ActionConstants.cs` (`MSG_SENDER`) | ported |
+| `utils/currencyMap.ts` | `Utils/CurrencyMap.cs` (`ToAddress`) | ported |
+| `utils/sortsBefore.ts` | `Utils/CurrencyOrder.cs` (`SortsBefore`) | ported |
+| `utils/calldata.ts` (`toHex`) | *(reuses V3 `Utils/Utilities.ToHex`)* | reused |
+| `multicall.ts` | *(reuses V3 `Multicall.EncodeMulticall`)* | reused |
+| `utils/hook.ts` | `Utils/Hook.cs` | pending (P2) |
+| `utils/priceTickConversions.ts` | `Utils/PriceTick.cs` | pending (P3) |
+| `entities/pool.ts` | `Entities/Pool.cs` (+ `PoolKey`/`PoolId`) | pending (P4) |
+| `utils/pathCurrency.ts`, `entities/route.ts` | `Utils/PathCurrency.cs`, `Entities/Route.cs` | pending (P5) |
+| `entities/position.ts` | `Entities/Position.cs` | pending (P6) |
+| `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` (`PathKey[]`) | pending (P7) |
+| `entities/trade.ts` | `Entities/Trade.cs` | pending (P8) |
+| `utils/v4Planner.ts` | `Utils/V4Planner.cs` (`Actions` + tuple ABI encoder) | pending (P9) |
+| `utils/v4PositionPlanner.ts` | `Utils/V4PositionPlanner.cs` | pending (P10) |
+| `PositionManager.ts` | `V4PositionManager.cs` | pending (P11) |
+| `utils/v4BaseActionsParser.ts` | `Utils/V4BaseActionsParser.cs` | pending (P12) |
+| `utils/positionManagerAbi.ts` | *(n/a — encode via Nethereum selectors, not the ABI JSON)* | n/a |
