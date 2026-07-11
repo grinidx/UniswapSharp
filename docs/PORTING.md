@@ -133,7 +133,7 @@ Dependency-ordered, test-first phases:
 | `utils/hook.ts` | `Utils/Hook.cs` (`HookOptions`/`HookPermissions`) | ported — `V4/Utils/HookTests.cs` (46) |
 | `utils/priceTickConversions.ts` | `Utils/PriceTick.cs` | ported — `V4/Utils/PriceTickTests.cs` (21, incl. native) |
 | `entities/pool.ts` | `Entities/Pool.cs` (+ `PoolKey`/`PoolId`) | ported — `V4/Entities/PoolTests.cs` (29) |
-| `utils/pathCurrency.ts`, `entities/route.ts` | `Utils/PathCurrency.cs`, `Entities/Route.cs` | pending (P5) |
+| `utils/pathCurrency.ts`, `entities/route.ts` | `Utils/PathCurrency.cs`, `Entities/Route.cs` | ported — `V4/Entities/RouteTests.cs` (29) |
 | `entities/position.ts` | `Entities/Position.cs` | pending (P6) |
 | `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` (`PathKey[]`) | pending (P7) |
 | `entities/trade.ts` | `Entities/Trade.cs` | pending (P8) |
