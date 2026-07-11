@@ -44,23 +44,23 @@
 | `staker.ts` | `Staker.cs` | Yes — `V3/StakerTests.cs` (8 cases) | ported |
 | `swapRouter.ts` | `SwapRouter.cs` | Yes — `V3/SwapRouterTests.cs` (12 cases, single-trade block) | ported |
 | `utils/calldata.ts` | `Utils/Utilities.cs` (`ToHex`) | No dedicated test file | ported |
-| `utils/computePoolAddress.ts` | `Utils/ComputePoolAddress.cs` | Indirect — exercised via `PoolTests.cs` (`Pool.GetAddress`) | ported |
+| `utils/computePoolAddress.ts` | `Utils/ComputePoolAddress.cs` | Yes — `V3/Utils/ComputePoolAddressTests.cs` (2 cases; zkSync CREATE2 case omitted, path not yet ported) | ported |
 | `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` | Yes — `EncodeRouteToPathTests.cs` (12 cases) | ported |
-| `utils/encodeSqrtRatioX96.ts` | `Utils/EncodeSqrtRatioX96.cs` | Indirect — exercised via `PoolTests.cs` | ported |
+| `utils/encodeSqrtRatioX96.ts` | `Utils/EncodeSqrtRatioX96.cs` | Yes — `V3/Utils/EncodeSqrtRatioX96Tests.cs` (5 cases) | ported |
 | `utils/fullMath.ts` | `Utils/FullMath.cs` | Indirect — exercised via `SqrtPriceMath`/`SwapMath` call sites in `PoolTests.cs`/`TradeTests.cs` | ported |
 | `utils/index.ts` | *(n/a — barrel export)* | n/a | n/a |
-| `utils/isSorted.ts` | `Utils/ListExtensions.cs` (`IsSorted`) | No dedicated test file | ported |
+| `utils/isSorted.ts` | `Utils/ListExtensions.cs` (`IsSorted`) | Yes — `V3/Utils/ListExtensionsTests.cs` (11 cases) | ported |
 | `utils/liquidityMath.ts` | `Utils/LiquidityMath.cs` | Indirect — exercised via `PositionTests.cs`/`PoolTests.cs` | ported |
-| `utils/maxLiquidityForAmounts.ts` | `Utils/MaxLiquidity.cs` | Indirect — exercised via `PositionTests.cs` | ported |
-| `utils/mostSignificantBit.ts` | `Utils/MostSignificantBitCalculator.cs` | Indirect — exercised via `TickMath` call sites | ported |
+| `utils/maxLiquidityForAmounts.ts` | `Utils/MaxLiquidity.cs` | Yes — `V3/Utils/MaxLiquidityTests.cs` (18 cases, imprecise + precise) | ported |
+| `utils/mostSignificantBit.ts` | `Utils/MostSignificantBitCalculator.cs` | Yes — `V3/Utils/MostSignificantBitCalculatorTests.cs` (5 cases) | ported |
 | `utils/nearestUsableTick.ts` | `Utils/NearestUsableTick.cs` | No dedicated test file | ported |
 | `utils/position.ts` | `Utils/PositionLibrary.cs` (`GetTokensOwed`) | Yes — `V3/Utils/PositionLibraryTests.cs` (incl. subIn256 wraparound) | ported |
 | `utils/priceTickConversions.ts` | `Utils/PriceTick.cs` | Yes — `V3/Utils/PriceTickTests.cs` (18 cases) | ported |
 | `utils/sqrtPriceMath.ts` | `Utils/SqrtPriceMath.cs` | Indirect — exercised via `PoolTests.cs`/`TradeTests.cs` | ported |
 | `utils/swapMath.ts` | `Utils/SwapMath.cs` | Indirect — exercised via `PoolTests.cs`/`TradeTests.cs` | ported |
-| `utils/tickLibrary.ts` | `Utils/TickLibrary.cs` | Indirect — `GetFeeGrowthInside`/`SubIn256` exercised via `PositionTests.cs` | ported |
-| `utils/tickList.ts` | `Utils/TickList.cs` | Indirect — exercised via `TickListDataProviderTests.cs` | ported |
-| `utils/tickMath.ts` | `Utils/TickMath.cs` | Indirect — exercised extensively via `PoolTests.cs`/`TradeTests.cs` | ported |
+| `utils/tickLibrary.ts` | `Utils/TickLibrary.cs` | Yes — `V3/Utils/TickLibraryTests.cs` (4 `GetFeeGrowthInside` cases) | ported |
+| `utils/tickList.ts` | `Utils/TickList.cs` | Yes — `V3/Utils/TickListTests.cs` (validate/isBelowSmallest/isAtOrAboveLargest/nextInitializedTick[WithinOneWord]) | ported |
+| `utils/tickMath.ts` | `Utils/TickMath.cs` | Yes — `V3/Utils/TickMathTests.cs` (9 cases) | ported |
 | `utils/v3swap.ts` | `Utils/V3Swap.cs` | Indirect — exercised via `Pool.GetOutputAmount`/`GetInputAmount` in `PoolTests.cs`/`TradeTests.cs` | ported |
 
 Legend: **ported** = fully implemented, at least indirectly test-covered; **partial** = implemented except for a
