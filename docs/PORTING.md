@@ -135,7 +135,7 @@ Dependency-ordered, test-first phases:
 | `entities/pool.ts` | `Entities/Pool.cs` (+ `PoolKey`/`PoolId`) | ported — `V4/Entities/PoolTests.cs` (29) |
 | `utils/pathCurrency.ts`, `entities/route.ts` | `Utils/PathCurrency.cs`, `Entities/Route.cs` | ported — `V4/Entities/RouteTests.cs` (29) |
 | `entities/position.ts` | `Entities/Position.cs` (+ `PermitTypes.cs`) | ported — `V4/Entities/PositionTests.cs` (3) |
-| `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` (`PathKey[]`) | pending (P7) |
+| `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` (`PathKey[]`) | ported — `V4/Utils/EncodeRouteToPathTests.cs` (4) |
 | `entities/trade.ts` | `Entities/Trade.cs` | pending (P8) |
 | `utils/v4Planner.ts` | `Utils/V4Planner.cs` (`Actions` + tuple ABI encoder) | pending (P9) |
 | `utils/v4PositionPlanner.ts` | `Utils/V4PositionPlanner.cs` | pending (P10) |
