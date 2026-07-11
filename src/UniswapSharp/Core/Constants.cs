@@ -17,20 +17,31 @@ public static class Constants
         ChainId.POLYGON_MUMBAI,
         ChainId.GOERLI,
         ChainId.SEPOLIA,
+        ChainId.CELO_ALFAJORES,
         ChainId.CELO,
         ChainId.BNB,
         ChainId.AVALANCHE,
         ChainId.BASE,
         ChainId.BASE_GOERLI,
+        ChainId.BASE_SEPOLIA,
         ChainId.ZORA,
         ChainId.ZORA_SEPOLIA,
         ChainId.ROOTSTOCK,
         ChainId.BLAST,
         ChainId.ZKSYNC,
-        // NOTE: the remaining chains (CELO_ALFAJORES, BASE_SEPOLIA, WORLDCHAIN, UNICHAIN[_SEPOLIA],
-        // MONAD[_TESTNET], SONEIUM, XLAYER, LINEA, TEMPO, MEGAETH, ARC, ROBINHOOD, INK) are added
-        // together with their CHAIN_TO_ADDRESSES_MAP entries in the addresses.ts parity PR — the
-        // address dictionaries are built by iterating SUPPORTED_CHAINS, so the two must land together.
+        ChainId.WORLDCHAIN,
+        ChainId.UNICHAIN_SEPOLIA,
+        ChainId.UNICHAIN,
+        ChainId.MONAD_TESTNET,
+        ChainId.SONEIUM,
+        ChainId.MONAD,
+        ChainId.XLAYER,
+        ChainId.LINEA,
+        ChainId.TEMPO,
+        ChainId.MEGAETH,
+        ChainId.ARC,
+        ChainId.ROBINHOOD,
+        ChainId.INK,
     };
 
     public static readonly Dictionary<string, string> NativeCurrencyName =
