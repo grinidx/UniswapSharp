@@ -29,6 +29,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Expose internal encode overloads (e.g. SmartWallet.EncodeErc7821BatchedCall(mode)) to the test project. -->
+    <InternalsVisibleTo Include="UniswapSharp.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ExtendedNumerics.BigRational" Version="3000.0.2.132" />
     <PackageReference Include="Nethereum.ABI" Version="6.1.0" />
     <PackageReference Include="Nethereum.Contracts" Version="6.1.0" />
