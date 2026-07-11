@@ -104,6 +104,14 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
   (`Skip(12).Take(20)`) of the keccak hash — the address — matching upstream's `keccak256(...).slice(26)` (a hex-string
   slice). It previously took the first 26 bytes, yielding a shifted, wrong address. Pinned test-first against the
   zkSync vector from `computePoolAddress.test.ts` (`ZksyncAddressComputerTests.cs`).
+- **sdk-core `Fraction.ToFixed`/`ToSignificant`** (`Core/Entities/Fractions/Fraction.cs`) are now computed with
+  exact `BigInteger` arithmetic instead of `double`/`decimal`/`Math.Pow`/`Math.Log10`. The old code took a
+  floating-point path (against the no-float rule) and, worse, cast through `System.Decimal`, which overflows
+  (~7.9e28) for large amounts — so formatting a large `CurrencyAmount`/`Price` threw. The new formatters match
+  `big.js` (toFixed) and `decimal.js-light` (toSignificant) to the digit across all three rounding modes,
+  negatives, and the significant-figure carry case. The `format` string parameter is retained for source
+  compatibility but ignored (upstream's `toFormat` only sets an always-empty group separator). Expected values
+  in `FractionFormattingTests.cs` were generated with the exact upstream libraries.
 - _(append new entries as they arise)_
 
 ## 7. Re-syncing with upstream
