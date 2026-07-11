@@ -138,8 +138,8 @@ Dependency-ordered, test-first phases:
 | `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` (`PathKey[]`) | ported — `V4/Utils/EncodeRouteToPathTests.cs` (4) |
 | `entities/trade.ts` | `Entities/Trade.cs` (+ `Swap.cs`/`RouteInput.cs`) | ported — `V4/Entities/TradeTests.cs` (67) |
 | `utils/v4Planner.ts` | `Utils/V4Planner.cs` (`Actions` + `AbiParamEncoder`) | ported — `V4/Utils/V4PlannerTests.cs` (18) |
-| `utils/v4PositionPlanner.ts` | `Utils/V4PositionPlanner.cs` | pending (P10) |
-| `PositionManager.ts` | `V4PositionManager.cs` | pending (P11) |
+| `utils/v4PositionPlanner.ts` | `Utils/V4PositionPlanner.cs` | ported (via PositionManagerTests) |
+| `PositionManager.ts` | `PositionManager.cs` (`V4PositionManager`) | ported — `V4/PositionManagerTests.cs` (20) |
 | `utils/v4BaseActionsParser.ts` | `Utils/V4BaseActionsParser.cs` | ported — `V4/Utils/V4BaseActionsParserTests.cs` (19) |
 | `utils/positionManagerAbi.ts` | *(n/a — encode via Nethereum selectors, not the ABI JSON)* | n/a |
 
