@@ -396,3 +396,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Agent worktrees (created by the harness)
+.claude/worktrees/
