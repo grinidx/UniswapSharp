@@ -43,7 +43,7 @@
 | `selfPermit.ts` | `SelfPermit.cs` | Yes — `V3/SelfPermitTests.cs` (2 cases) | ported |
 | `staker.ts` | `Staker.cs` | Yes — `V3/StakerTests.cs` (8 cases) | ported |
 | `swapRouter.ts` | `SwapRouter.cs` | Yes — `V3/SwapRouterTests.cs` (12 cases, single-trade block) | ported |
-| `utils/calldata.ts` | `Utils/Utilities.cs` (`ToHex`) | No dedicated test file | ported |
+| `utils/calldata.ts` | `Utils/Utilities.cs` (`ToHex`) | Yes — `V3/Utils/ToHexTests.cs` (incl. sign-nibble regressions) | ported |
 | `utils/computePoolAddress.ts` | `Utils/ComputePoolAddress.cs` | Yes — `V3/Utils/ComputePoolAddressTests.cs` (2 cases; zkSync CREATE2 case omitted, path not yet ported) | ported |
 | `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` | Yes — `EncodeRouteToPathTests.cs` (12 cases) | ported |
 | `utils/encodeSqrtRatioX96.ts` | `Utils/EncodeSqrtRatioX96.cs` | Yes — `V3/Utils/EncodeSqrtRatioX96Tests.cs` (5 cases) | ported |
@@ -88,6 +88,11 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
   rule while matching the output to the digit. This also fixed two latent bugs: the guards used `Debug.Assert`
   (compiled out under `-c Release`, so `TICK_SPACING`/`TICK_BOUND` never threw) and `Math.Round` used C#'s
   default banker's rounding (so `Find(5, 10)` returned 0 instead of 10). Fixed test-first (`NearestUsableTickTests.cs`).
+- `Utilities.ToHex` strips the sign nibble that `BigInteger.ToString("X")` prepends to a non-negative
+  value whose top nibble is `>= 8` (e.g. `200 -> "0C8"`), matching JS `bigInt.toString(16)`'s minimal form.
+  Without this the encoded `value` (msg.value) gained a spurious leading `00` byte for any amount with the
+  high bit set. Latent because existing tests never routed such a value through `ToHex`; surfaced by the
+  SwapRouter multi-trade ETH-in value sums (`0xc8`/`0xd0`). Fixed test-first (`ToHexTests.cs`).
 - _(append new entries as they arise)_
 
 ## 7. Re-syncing with upstream
