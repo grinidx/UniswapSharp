@@ -137,7 +137,7 @@ Dependency-ordered, test-first phases:
 | `entities/position.ts` | `Entities/Position.cs` (+ `PermitTypes.cs`) | ported — `V4/Entities/PositionTests.cs` (3) |
 | `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` (`PathKey[]`) | ported — `V4/Utils/EncodeRouteToPathTests.cs` (4) |
 | `entities/trade.ts` | `Entities/Trade.cs` (+ `Swap.cs`/`RouteInput.cs`) | ported — `V4/Entities/TradeTests.cs` (67) |
-| `utils/v4Planner.ts` | `Utils/V4Planner.cs` (`Actions` + tuple ABI encoder) | pending (P9) |
+| `utils/v4Planner.ts` | `Utils/V4Planner.cs` (`Actions` + `AbiParamEncoder`) | ported — `V4/Utils/V4PlannerTests.cs` (18) |
 | `utils/v4PositionPlanner.ts` | `Utils/V4PositionPlanner.cs` | pending (P10) |
 | `PositionManager.ts` | `V4PositionManager.cs` | pending (P11) |
 | `utils/v4BaseActionsParser.ts` | `Utils/V4BaseActionsParser.cs` | pending (P12) |
