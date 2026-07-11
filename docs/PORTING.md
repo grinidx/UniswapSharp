@@ -53,7 +53,7 @@
 | `utils/liquidityMath.ts` | `Utils/LiquidityMath.cs` | Indirect — exercised via `PositionTests.cs`/`PoolTests.cs` | ported |
 | `utils/maxLiquidityForAmounts.ts` | `Utils/MaxLiquidity.cs` | Yes — `V3/Utils/MaxLiquidityTests.cs` (18 cases, imprecise + precise) | ported |
 | `utils/mostSignificantBit.ts` | `Utils/MostSignificantBitCalculator.cs` | Yes — `V3/Utils/MostSignificantBitCalculatorTests.cs` (5 cases) | ported |
-| `utils/nearestUsableTick.ts` | `Utils/NearestUsableTick.cs` | No dedicated test file | ported |
+| `utils/nearestUsableTick.ts` | `Utils/NearestUsableTick.cs` | Yes — `V3/Utils/NearestUsableTickTests.cs` (9 cases) | ported |
 | `utils/position.ts` | `Utils/PositionLibrary.cs` (`GetTokensOwed`) | Yes — `V3/Utils/PositionLibraryTests.cs` (incl. subIn256 wraparound) | ported |
 | `utils/priceTickConversions.ts` | `Utils/PriceTick.cs` | Yes — `V3/Utils/PriceTickTests.cs` (18 cases) | ported |
 | `utils/sqrtPriceMath.ts` | `Utils/SqrtPriceMath.cs` | Indirect — exercised via `PoolTests.cs`/`TradeTests.cs` | ported |
@@ -83,6 +83,11 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
   trailing-trimmed fractional part), matching Decimal.js. The earlier `(decimal)` cast overflowed
   `System.Decimal` (~7.9e28) for large amounts; hardened test-first (`CurrencyAmountTests.cs`, incl. a
   max-uint256 case).
+- `NearestUsableTick.Find` computes `round(tick / tickSpacing)` with integer arithmetic (floor-division
+  plus round-half-toward-+∞) rather than upstream's floating-point `Math.round`, honouring the no-floating-point
+  rule while matching the output to the digit. This also fixed two latent bugs: the guards used `Debug.Assert`
+  (compiled out under `-c Release`, so `TICK_SPACING`/`TICK_BOUND` never threw) and `Math.Round` used C#'s
+  default banker's rounding (so `Find(5, 10)` returned 0 instead of 10). Fixed test-first (`NearestUsableTickTests.cs`).
 - _(append new entries as they arise)_
 
 ## 7. Re-syncing with upstream
