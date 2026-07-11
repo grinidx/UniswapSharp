@@ -146,3 +146,4 @@ Dependency-ordered, test-first phases:
 ## 9. Other monorepo packages (parity)
 - **v2-sdk** → `src/UniswapSharp/V2/` (Constants, Errors, Pair [CREATE2 + 997/1000 fee math], Route, Trade, Router). Tests under `test/.../V2/` (92 cases). V2 slippage uses the linear `(1 ± slippage)` form; the V2 Router returns method-name + hex args (it does not ABI-encode calldata).
 - flashtestations-sdk / tamperproof-transactions — **out of scope** (network/DNS/WebCrypto, non-DeFi; no Uniswap deps).
+- **permit2-sdk** → `src/UniswapSharp/Permit2/` (Constants, Domain, `Eip712TypedDataEncoder` [ethers `_TypedDataEncoder` port, byte-exact], SignatureTransfer, AllowanceTransfer). 21 cases; 6 EIP-712 hash vectors matched to the digit. `providers/*` (on-chain reads) omitted.
