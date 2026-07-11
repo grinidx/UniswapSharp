@@ -59,4 +59,53 @@ public class AddressesTests
         string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.BLAST);
         Assert.Equal("0x549FEB8c9bd4c12Ad2AB27022dA12492aC452B66", address);
     }
+
+    [Fact]
+    public void SwapRouter02Addresses_ShouldReturnCorrectAddress_ForXLayer()
+    {
+        string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.XLAYER);
+        Assert.Equal("0x4f0c28f5926afda16bf2506d5d9e57ea190f9bca", address);
+    }
+
+    [Fact]
+    public void SwapRouter02Addresses_ShouldReturnCorrectAddress_ForLinea()
+    {
+        string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.LINEA);
+        Assert.Equal("0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a", address);
+    }
+
+    [Fact]
+    public void SwapRouter02Addresses_ShouldReturnCorrectAddress_ForTempo()
+    {
+        string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.TEMPO);
+        Assert.Equal("0x7e9d53081e961201837336bcd81f52ae92691a8f", address);
+    }
+
+    [Fact]
+    public void SwapRouter02Addresses_ShouldReturnCorrectAddress_ForMegaEth()
+    {
+        string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.MEGAETH);
+        Assert.Equal("0x48020de9208bafc183f5cad5118ffbe8f0f913f5", address);
+    }
+
+    [Fact]
+    public void SwapRouter02Addresses_ShouldReturnCorrectAddress_ForArc()
+    {
+        string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.ARC);
+        Assert.Equal("0x53bf6b0684ec7ef91e1387da3d1a1769bc5a6f77", address);
+    }
+
+    [Fact]
+    public void SwapRouter02Addresses_ShouldReturnCorrectAddress_ForRobinhood()
+    {
+        string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.ROBINHOOD);
+        Assert.Equal("0xcaf681a66d020601342297493863e78c959e5cb2", address);
+    }
+
+    [Fact]
+    public void SwapRouter02Addresses_ShouldReturnCorrectAddress_ForInk()
+    {
+        string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.INK);
+        Assert.Equal("0x177778f19e89dd1012bdbe603f144088a95c4b53", address);
+    }
 }
