@@ -142,3 +142,7 @@ Dependency-ordered, test-first phases:
 | `PositionManager.ts` | `V4PositionManager.cs` | pending (P11) |
 | `utils/v4BaseActionsParser.ts` | `Utils/V4BaseActionsParser.cs` | pending (P12) |
 | `utils/positionManagerAbi.ts` | *(n/a — encode via Nethereum selectors, not the ABI JSON)* | n/a |
+
+## 9. Other monorepo packages (parity)
+- **v2-sdk** → `src/UniswapSharp/V2/` (Constants, Errors, Pair [CREATE2 + 997/1000 fee math], Route, Trade, Router). Tests under `test/.../V2/` (92 cases). V2 slippage uses the linear `(1 ± slippage)` form; the V2 Router returns method-name + hex args (it does not ABI-encode calldata).
+- flashtestations-sdk / tamperproof-transactions — **out of scope** (network/DNS/WebCrypto, non-DeFi; no Uniswap deps).
