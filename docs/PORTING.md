@@ -93,6 +93,17 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
   Without this the encoded `value` (msg.value) gained a spurious leading `00` byte for any amount with the
   high bit set. Latent because existing tests never routed such a value through `ToHex`; surfaced by the
   SwapRouter multi-trade ETH-in value sums (`0xc8`/`0xd0`). Fixed test-first (`ToHexTests.cs`).
+- **sdk-core `sqrt`** (`Core/Utils/MathUtils.cs`): `MAX_SAFE_INTEGER` is `2^53 - 1` (JS `Number.MAX_SAFE_INTEGER`), not
+  `long.MaxValue` (`2^63 - 1`). Above `2^53` a `double` loses integer precision, so the `Math.Sqrt` fast path
+  must stop there and fall through to Newton's method (as upstream does); the old constant let the fast path
+  run across `[2^53, 2^63)` and return a wrong `floor(sqrt)` for non-perfect-squares. Fixed test-first (`SqrtTests.cs`).
+- **sdk-core `Token`** (`Core/Entities/Token.cs`): the FOT non-negative-fee invariant now throws `ArgumentException`
+  ("NON-NEGATIVE FOT FEES"). It previously used `Debug.Assert`, compiled out under `-c Release`, so negative
+  `buyFeeBps`/`sellFeeBps` were silently accepted. Fixed test-first (`TokenTests.Constructor_FailsWithNegativeFOTFees`).
+- **sdk-core `computeZksyncCreate2Address`** (`Core/Utils/ZksyncAddressComputer.cs`): takes the **last 20 bytes**
+  (`Skip(12).Take(20)`) of the keccak hash — the address — matching upstream's `keccak256(...).slice(26)` (a hex-string
+  slice). It previously took the first 26 bytes, yielding a shifted, wrong address. Pinned test-first against the
+  zkSync vector from `computePoolAddress.test.ts` (`ZksyncAddressComputerTests.cs`).
 - _(append new entries as they arise)_
 
 ## 7. Re-syncing with upstream

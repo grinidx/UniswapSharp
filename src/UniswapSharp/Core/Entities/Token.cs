@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Numerics;
 using UniswapSharp.Core.Utils;
 
@@ -55,14 +54,14 @@ public class Token : BaseCurrency, IEquatable<Token>
             Address = AddressValidator.ValidateAndParseAddress(address);
         }
 
-        if (buyFeeBps.HasValue)
+        if (buyFeeBps.HasValue && buyFeeBps.Value < BigInteger.Zero)
         {
-            Debug.Assert(buyFeeBps.Value >= BigInteger.Zero, "NON-NEGATIVE FOT FEES");
+            throw new ArgumentException("NON-NEGATIVE FOT FEES");
         }
 
-        if (sellFeeBps.HasValue)
+        if (sellFeeBps.HasValue && sellFeeBps.Value < BigInteger.Zero)
         {
-            Debug.Assert(sellFeeBps.Value >= BigInteger.Zero, "NON-NEGATIVE FOT FEES");
+            throw new ArgumentException("NON-NEGATIVE FOT FEES");
         }
 
         BuyFeeBps = buyFeeBps;

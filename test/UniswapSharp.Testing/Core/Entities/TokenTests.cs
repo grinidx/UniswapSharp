@@ -1,3 +1,4 @@
+using System.Numerics;
 using UniswapSharp.Core.Entities;
 
 namespace UniswapSharp.Testing.Core.Entities;
@@ -32,12 +33,12 @@ public class TokenTests
     //    Assert.Throws<ArgumentException>(() => new Token(3, ADDRESS_ONE, 1.5));
     //}
 
-    //[Fact]
-    //public void Constructor_FailsWithNegativeFOTFees()
-    //{
-    //    Assert.Throws<ArgumentException>(() => new Token(3, ADDRESS_ONE, 18, null, null, null, BigInteger.Parse("-1"), null));
-    //    Assert.Throws<ArgumentException>(() => new Token(3, ADDRESS_ONE, 18, null, null, null, null, BigInteger.Parse("-1")));
-    //}
+    [Fact]
+    public void Constructor_FailsWithNegativeFOTFees()
+    {
+        Assert.Throws<ArgumentException>(() => new Token(3, ADDRESS_ONE, 18, null, null, false, BigInteger.Parse("-1"), null));
+        Assert.Throws<ArgumentException>(() => new Token(3, ADDRESS_ONE, 18, null, null, false, null, BigInteger.Parse("-1")));
+    }
 
     [Fact]
     public void Constructor_WithBypassChecksum_CreatesTokenWithValidAddress()

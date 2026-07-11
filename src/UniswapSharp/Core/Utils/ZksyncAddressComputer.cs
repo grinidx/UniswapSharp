@@ -25,7 +25,9 @@ public static class ZksyncAddressComputer
             inputHash
         );
 
-        var addressBytes = sha3Keccack.CalculateHash(concatenated).Take(26).ToArray();
+        // Upstream keeps `keccak256(...).slice(26)` — i.e. the hex string from char 26 onward,
+        // which is the last 20 bytes (bytes 12..31) of the 32-byte hash, the standard address.
+        var addressBytes = sha3Keccack.CalculateHash(concatenated).Skip(12).Take(20).ToArray();
         return new AddressUtil().ConvertToChecksumAddress(addressBytes);
     }
 
