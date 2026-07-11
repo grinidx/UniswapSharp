@@ -4,7 +4,9 @@ namespace UniswapSharp.Core.Utils;
 
 public static class MathUtils
 {
-    public static readonly BigInteger MAX_SAFE_INTEGER = new BigInteger(long.MaxValue);
+    // Number.MAX_SAFE_INTEGER (2^53 - 1). Above this a double loses integer precision, so the
+    // Math.Sqrt fast path can only be used strictly below it (upstream uses Newton's method above).
+    public static readonly BigInteger MAX_SAFE_INTEGER = new BigInteger(9007199254740991L);
 
     private static readonly BigInteger ZERO = BigInteger.Zero;
     private static readonly BigInteger ONE = BigInteger.One;
