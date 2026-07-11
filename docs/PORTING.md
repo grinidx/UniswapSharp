@@ -131,7 +131,7 @@ Dependency-ordered, test-first phases:
 | `utils/calldata.ts` (`toHex`) | *(reuses V3 `Utils/Utilities.ToHex`)* | reused |
 | `multicall.ts` | *(reuses V3 `Multicall.EncodeMulticall`)* | reused |
 | `utils/hook.ts` | `Utils/Hook.cs` (`HookOptions`/`HookPermissions`) | ported — `V4/Utils/HookTests.cs` (46) |
-| `utils/priceTickConversions.ts` | `Utils/PriceTick.cs` | pending (P3) |
+| `utils/priceTickConversions.ts` | `Utils/PriceTick.cs` | ported — `V4/Utils/PriceTickTests.cs` (21, incl. native) |
 | `entities/pool.ts` | `Entities/Pool.cs` (+ `PoolKey`/`PoolId`) | pending (P4) |
 | `utils/pathCurrency.ts`, `entities/route.ts` | `Utils/PathCurrency.cs`, `Entities/Route.cs` | pending (P5) |
 | `entities/position.ts` | `Entities/Position.cs` | pending (P6) |
