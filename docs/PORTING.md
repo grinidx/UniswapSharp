@@ -140,7 +140,7 @@ Dependency-ordered, test-first phases:
 | `utils/v4Planner.ts` | `Utils/V4Planner.cs` (`Actions` + `AbiParamEncoder`) | ported — `V4/Utils/V4PlannerTests.cs` (18) |
 | `utils/v4PositionPlanner.ts` | `Utils/V4PositionPlanner.cs` | pending (P10) |
 | `PositionManager.ts` | `V4PositionManager.cs` | pending (P11) |
-| `utils/v4BaseActionsParser.ts` | `Utils/V4BaseActionsParser.cs` | pending (P12) |
+| `utils/v4BaseActionsParser.ts` | `Utils/V4BaseActionsParser.cs` | ported — `V4/Utils/V4BaseActionsParserTests.cs` (19) |
 | `utils/positionManagerAbi.ts` | *(n/a — encode via Nethereum selectors, not the ABI JSON)* | n/a |
 
 ## 9. Other monorepo packages (parity)
