@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write   # attach assets to the GitHub Release
+      id-token: write   # OIDC token for NuGet Trusted Publishing (keyless, no long-lived API key)
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -32,11 +33,20 @@ jobs:
       - name: Pack
         run: dotnet pack src/UniswapSharp/UniswapSharp.csproj -c Release -o ./artifacts --no-build
 
+      # Trusted Publishing: exchange the GitHub OIDC token for a short-lived (1 hour) NuGet API key.
+      # No long-lived secret to store/rotate. Requires a policy on nuget.org:
+      #   Repository Owner: grinidx  ·  Repository: UniswapSharp  ·  Workflow File: release.yml
+      # NUGET_USER is your nuget.org profile username (not email); store it as a repo secret/variable.
+      - name: NuGet login (OIDC → temporary API key)
+        id: nuget-login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push to NuGet
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          dotnet nuget push "./artifacts/*.nupkg" --api-key "$NUGET_API_KEY" \
+          dotnet nuget push "./artifacts/*.nupkg" \
+            --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" \
             --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Attach artifacts to GitHub Release
