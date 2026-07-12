@@ -4,14 +4,14 @@ using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.Router.Entities;
 using UniswapSharp.Router.Entities.MixedRoute;
+using MixedSDK = UniswapSharp.Router.Entities.MixedRoute.MixedRouteSDK<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
+using RouterTrade = UniswapSharp.Router.Entities.Trade<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
 using V2Pair = UniswapSharp.V2.Entities.Pair;
 using V2Route = UniswapSharp.V2.Entities.Route<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
 using V3Pool = UniswapSharp.V3.Entities.Pool;
 using V3Route = UniswapSharp.V3.Entities.Route<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
 using V4Pool = UniswapSharp.V4.Entities.Pool;
 using V4Route = UniswapSharp.V4.Entities.Route<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
-using RouterTrade = UniswapSharp.Router.Entities.Trade<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
-using MixedSDK = UniswapSharp.Router.Entities.MixedRoute.MixedRouteSDK<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
 
 namespace UniswapSharp.UniversalRouter.Utils;
 
