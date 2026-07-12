@@ -1,0 +1,73 @@
+using UniswapSharp.Core.Entities;
+using UniswapSharp.Core.Entities.Fractions;
+using UniswapSharp.Router;
+using UniswapSharp.V3;
+
+namespace UniswapSharp.Testing.Router;
+
+// Ported 1:1 from sdks/router-sdk/src/paymentsExtended.test.ts
+public class PaymentsExtendedTests
+{
+    private const string recipient = "0x0000000000000000000000000000000000000003";
+    private static readonly System.Numerics.BigInteger amount = 123;
+
+    private static readonly Payments.FeeOptions feeOptions = new()
+    {
+        Fee = new Percent(1, 1000),
+        Recipient = "0x0000000000000000000000000000000000000009",
+    };
+
+    private static readonly Token token = new(1, "0x0000000000000000000000000000000000000001", 18, "t0", "token0");
+
+    // ---- #encodeUnwrapWETH9 ----
+    [Fact]
+    public void EncodeUnwrapWETH9_WithoutRecipient() =>
+        Assert.Equal("0x49616997000000000000000000000000000000000000000000000000000000000000007b",
+            PaymentsExtended.EncodeUnwrapWETH9(amount));
+
+    [Fact]
+    public void EncodeUnwrapWETH9_WithRecipient() =>
+        Assert.Equal("0x49404b7c000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000003",
+            PaymentsExtended.EncodeUnwrapWETH9(amount, recipient));
+
+    [Fact]
+    public void EncodeUnwrapWETH9_WithRecipientAndFee() =>
+        Assert.Equal("0x9b2c0a37000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000009",
+            PaymentsExtended.EncodeUnwrapWETH9(amount, recipient, feeOptions));
+
+    [Fact]
+    public void EncodeUnwrapWETH9_WithoutRecipientAndWithFee() =>
+        Assert.Equal("0xd4ef38de000000000000000000000000000000000000000000000000000000000000007b000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000009",
+            PaymentsExtended.EncodeUnwrapWETH9(amount, null, feeOptions));
+
+    // ---- #encodeSweepToken ----
+    [Fact]
+    public void EncodeSweepToken_WithoutRecipient() =>
+        Assert.Equal("0xe90a182f0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000007b",
+            PaymentsExtended.EncodeSweepToken(token, amount));
+
+    [Fact]
+    public void EncodeSweepToken_WithRecipient() =>
+        Assert.Equal("0xdf2ab5bb0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000003",
+            PaymentsExtended.EncodeSweepToken(token, amount, recipient));
+
+    [Fact]
+    public void EncodeSweepToken_WithRecipientAndFee() =>
+        Assert.Equal("0xe0e189a00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000009",
+            PaymentsExtended.EncodeSweepToken(token, amount, recipient, feeOptions));
+
+    [Fact]
+    public void EncodeSweepToken_WithoutRecipientAndWithFee() =>
+        Assert.Equal("0x3068c5540000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000007b000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000009",
+            PaymentsExtended.EncodeSweepToken(token, amount, null, feeOptions));
+
+    [Fact]
+    public void EncodePull() =>
+        Assert.Equal("0xf2d5d56b0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000007b",
+            PaymentsExtended.EncodePull(token, amount));
+
+    [Fact]
+    public void EncodeWrapETH() =>
+        Assert.Equal("0x1c58db4f000000000000000000000000000000000000000000000000000000000000007b",
+            PaymentsExtended.EncodeWrapETH(amount));
+}
