@@ -46,4 +46,22 @@ public static class OrderUtils
     /// <summary>Returns <paramref name="original"/> when <paramref name="value"/> is zero (uniswapx-sdk <c>originalIfZero</c>).</summary>
     public static BigInteger OriginalIfZero(BigInteger value, BigInteger original) =>
         value.IsZero ? original : value;
+
+    /// <summary>
+    /// Equivalent of <c>hexStripZeros(value.toHexString())</c>: the minimal lower-case <c>0x</c> hex of a
+    /// non-negative integer with all leading zero nibbles removed (<c>0</c> renders as <c>0x0</c>).
+    /// </summary>
+    public static string HexStripZeros(BigInteger value)
+    {
+        if (value.Sign < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), "value must be non-negative");
+        }
+        if (value.IsZero)
+        {
+            return "0x0";
+        }
+        string hex = value.ToString("x").TrimStart('0');
+        return "0x" + (hex.Length == 0 ? "0" : hex);
+    }
 }
