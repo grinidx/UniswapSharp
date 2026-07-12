@@ -156,7 +156,10 @@ public static class AbiParamEncoder
         short s => s,
         byte by => by,
         bool bo => bo ? BigInteger.One : BigInteger.Zero,
-        string str => BigInteger.Parse(str),
+        // BigNumberish: accept 0x-prefixed hex as well as decimal strings
+        string str => str.StartsWith("0x") || str.StartsWith("0X")
+            ? BigInteger.Parse("0" + str[2..], System.Globalization.NumberStyles.HexNumber)
+            : BigInteger.Parse(str),
         null => throw new ArgumentNullException(nameof(value), "Numeric ABI value cannot be null"),
         _ => throw new ArgumentException($"Cannot convert {value.GetType().Name} to a numeric ABI value"),
     };
