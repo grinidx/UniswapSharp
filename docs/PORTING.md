@@ -145,7 +145,8 @@ Dependency-ordered, test-first phases:
 
 ## 9. Other monorepo packages (parity)
 - **v2-sdk** → `src/UniswapSharp/V2/` (Constants, Errors, Pair [CREATE2 + 997/1000 fee math], Route, Trade, Router). Tests under `test/.../V2/` (92 cases). V2 slippage uses the linear `(1 ± slippage)` form; the V2 Router returns method-name + hex args (it does not ABI-encode calldata).
-- flashtestations-sdk / tamperproof-transactions — **out of scope** (network/DNS/WebCrypto, non-DeFi; no Uniswap deps).
+- flashtestations-sdk — **out of scope** (network/DNS, non-DeFi; no Uniswap deps).
+- **tamperproof-transactions** (EIP-7754) → `src/UniswapSharp/Tamperproof/` — ported; see section 11.
 - **permit2-sdk** → `src/UniswapSharp/Permit2/` (Constants, Domain, `Eip712TypedDataEncoder` [ethers `_TypedDataEncoder` port, byte-exact], SignatureTransfer, AllowanceTransfer). 21 cases; 6 EIP-712 hash vectors matched to the digit. `providers/*` (on-chain reads) omitted.
 - **smart-wallet-sdk** → `src/UniswapSharp/SmartWallet/` (Constants/ModeType, Types, CallPlanner/BatchedCallPlanner, SmartWallet [EncodeUserOp/EncodeBatchedCall/EncodeErc7821BatchedCall], Delegation.ParseFromCode). 50 cases; ERC-7821 mode words + `execute` selectors (`0x99e1d016`/`0xe9ae5c53`/`0x8dd7712f`) matched to the digit. `parseAuthorizationList*` (viem ECDSA recovery) omitted.
 
@@ -195,3 +196,55 @@ swapExactTokensForTokens/swapTokensForExactTokens, pull/sweep/unwrap/wrap, mint/
   encoders are already tested under `V3/SelfPermitTests`). The remaining `swapAndAddCallParameters` describe
   blocks (existing-position, the four approval-type variants, native in/out) are not ported — the single-hop,
   multi-hop and mixed-route swap-and-add paths are covered and byte-verified.
+
+## 11. tamperproof-transactions port (EIP-7754)
+Ported under `src/UniswapSharp/Tamperproof/` → namespace `UniswapSharp.Tamperproof` (tests under
+`test/.../Tamperproof/`, 137 xUnit cases). EIP-7754 "TWIST": a dApp signs its calldata; a wallet verifies the
+signature against a public key published in the site's DNS TXT record (fetched over DNS-over-HTTPS) and/or an
+HTTPS manifest. Built on Web Crypto JWS algorithms — **not** Ethereum secp256k1 — so this maps to
+`System.Security.Cryptography` (+ BouncyCastle for Ed25519), not Nethereum.
+
+| Upstream `sdks/tamperproof-transactions/src/…` | UniswapSharp `src/UniswapSharp/Tamperproof/…` | Tests ported | Status |
+|---|---|---|---|
+| `constants/errors.ts` | `Constants/Errors.cs` (+ `TamperproofException`) | via callers (message-asserted) | ported |
+| `utils/hex.ts` | `Utils/Hex.cs` (`FromHex`/`ToHex`/`NormalizeHex`/`FromBase64`) | Yes — `HexTests.cs` (34) | ported |
+| `utils/canonicalJson.ts` | `Utils/CanonicalJson.cs` (`CanonicalStringify`/`SerializeRequestPayload`) | Yes — `CanonicalJsonTests.cs` (7) | ported |
+| `utils/txtRecord.ts` | `Utils/TxtRecord.cs` (`ParseTxtRecord`/`ProcessTxtRecordData`) | Yes — `TxtRecordTests.cs` (19) | ported |
+| `algorithms.ts` | `Algorithms.cs` (+ `Utils/SigningCrypto.cs`) | via sign/verify | ported |
+| `sign.ts` | `Sign.cs` (`Signer.Sign`) | Yes — `SignTests.cs` (19) | ported |
+| `verify.ts` | `Verify.cs` (`Verifier`) + `IDohResolver.cs` / `IManifestFetcher.cs` | Yes — `VerifyTests.cs` (34) | ported |
+| `generate.ts` | `Generate.cs` (`Generator.Generate`, `PublicKey`) | Yes — `GenerateTests.cs` (24) | ported |
+| `utils/webcrypto.ts`, `utils/crypto-browser-shim.ts` | *(n/a — Node/browser WebCrypto shim)* | n/a | omitted |
+
+Algorithm mapping (`algorithms.ts` → `System.Security.Cryptography`): **RS256/384/512** → RSA + PKCS#1 v1.5 +
+SHA-256/384/512; **PS256/384/512** → RSA-PSS + SHA-256/384/512 (salt length = hash length, .NET's `Pss`
+default); **ES256/384/512** → ECDsa on P-256/P-384/**P-521** with raw `r||s` signatures via
+`DSASignatureFormat.IeeeP1363FixedFieldConcatenation`; **EdDSA** → Ed25519.
+
+### Ed25519 dependency decision
+`System.Security.Cryptography` has **no managed Ed25519** in net10.0, so EdDSA sign/verify use
+**`BouncyCastle.Cryptography` 2.5.1** (pure-managed, already present transitively via Nethereum), added as an
+explicit `<PackageReference>` in `src/UniswapSharp/UniswapSharp.csproj`. RSA and ECDSA stay on SSC. The
+deterministic Ed25519 vector from `sign.test.ts` matches byte-for-byte.
+
+### Intentional divergences (tamperproof-transactions)
+- **Injectable DNS/HTTPS.** Upstream's `dohjs` `DohResolver` and global `fetch` are replaced with the
+  `IDohResolver` / `IManifestFetcher` interfaces (upstream already parameterizes the resolver via
+  `thisResolver`). Tests inject fakes exactly as `verify.test.ts` mocks the globals. A production
+  `HttpManifestFetcher` (redirects rejected, `Accept: application/json`, timeout via `CancellationToken`) is
+  provided; **no live DoH resolver is bundled** (live TXT resolution is deferred — callers inject one).
+- **Web Crypto shim omitted.** `utils/webcrypto.ts` / `utils/crypto-browser-shim.ts` resolve Web Crypto in
+  Node vs browser; .NET uses `System.Security.Cryptography` directly, so the shim has no analog.
+- **Synchronous sign/verify.** `Signer.Sign` and `Verifier.Verify` are synchronous (SSC has no async subtle
+  API); `Verifier.VerifyAsyncJson`/`VerifyAsyncDns` stay async for the injected I/O. `Verify` takes the SPKI
+  public-key bytes directly (imported internally) rather than a pre-imported WebCrypto `CryptoKey`.
+- **encodeURIComponent.** The TWIST path is percent-encoded via `Uri.EscapeDataString` with `!'()*` restored,
+  matching `encodeURIComponent` exactly (`Uri.EscapeDataString` otherwise escapes those five). The sanitize
+  vector (`//api v1/ƙeys?bad#frag` → `https://example.com/api%20v1/%C6%99eys%3Fbad%23frag`) matches to the byte.
+- **Empty-TWIST truthiness.** The "first/multiple TWIST" and "no prefix" guards use `string.IsNullOrEmpty`,
+  mirroring JS truthiness (an empty `TWIST=` value is treated as not-found), not C# `is null`.
+- **`fromBase64` platform branch / `processTxtRecordData` fallback.** `Hex.FromBase64` always uses
+  `Convert.FromBase64String` (the JS `atob`-vs-`Buffer` branch and its `ERROR_NO_BASE64_DECODER` path are a
+  browser/Node shim with no .NET analog). `ProcessTxtRecordData`'s non-string/non-bytes fallback uses
+  `.ToString()`; the upstream `String(false)` → `"false"` case (C# `bool.ToString()` is `"False"`) never
+  occurs in the real DoH flow and is not asserted.
