@@ -148,3 +148,50 @@ Dependency-ordered, test-first phases:
 - flashtestations-sdk / tamperproof-transactions — **out of scope** (network/DNS/WebCrypto, non-DeFi; no Uniswap deps).
 - **permit2-sdk** → `src/UniswapSharp/Permit2/` (Constants, Domain, `Eip712TypedDataEncoder` [ethers `_TypedDataEncoder` port, byte-exact], SignatureTransfer, AllowanceTransfer). 21 cases; 6 EIP-712 hash vectors matched to the digit. `providers/*` (on-chain reads) omitted.
 - **smart-wallet-sdk** → `src/UniswapSharp/SmartWallet/` (Constants/ModeType, Types, CallPlanner/BatchedCallPlanner, SmartWallet [EncodeUserOp/EncodeBatchedCall/EncodeErc7821BatchedCall], Delegation.ParseFromCode). 50 cases; ERC-7821 mode words + `execute` selectors (`0x99e1d016`/`0xe9ae5c53`/`0x8dd7712f`) matched to the digit. `parseAuthorizationList*` (viem ECDSA recovery) omitted.
+
+## 10. router-sdk port
+Ported under `src/UniswapSharp/Router/` → namespace `UniswapSharp.Router` (tests under `test/.../Router/`).
+Aggregates V2/V3/V4/mixed routes and encodes SwapRouter02 calldata. 193 xUnit cases; all calldata is
+byte-verified against the upstream `.test.ts` expected values (multicall, exactInput(Single)/exactOutput(Single),
+swapExactTokensForTokens/swapTokensForExactTokens, pull/sweep/unwrap/wrap, mint/increaseLiquidity).
+
+| Upstream `sdks/router-sdk/src/…` | UniswapSharp `src/UniswapSharp/Router/…` | Tests ported | Status |
+|---|---|---|---|
+| `constants.ts` | `Constants.cs` | via callers | ported |
+| `entities/protocol.ts` | `Entities/Protocol.cs` (`Protocol` enum) | via callers | ported |
+| `utils/TPool.ts` | `Utils/TPool.cs` | via callers | ported |
+| `utils/pathCurrency.ts` | `Utils/PathCurrency.cs` | Yes — `Router/Utils/PathCurrencyTests.cs` (1) | ported |
+| `utils/encodeMixedRouteToPath.ts` | `Utils/EncodeMixedRouteToPath.cs` | Yes — `Router/Utils/EncodeMixedRouteToPathTests.cs` (20) | ported |
+| `utils/index.ts` (`partitionMixedRouteByProtocol`, `getOutputOfPools`) | `Utils/MixedRouteUtils.cs` | Yes — in `MixedRouteTests.cs` | ported |
+| `entities/route.ts` (`IRoute`, `RouteV2/V3/V4`, `MixedRoute`, `getPathToken`) | `Entities/Route.cs` | Yes — `Router/Entities/RouteTests.cs` (21) | ported |
+| `entities/mixedRoute/route.ts` | `Entities/MixedRoute/MixedRouteSDK.cs` | Yes — `Router/Entities/MixedRoute/MixedRouteTests.cs` (51) | ported |
+| `entities/mixedRoute/trade.ts` | `Entities/MixedRoute/MixedRouteTrade.cs` | Yes — `MixedRouteTradeTests.cs` (45) | ported |
+| `entities/trade.ts` | `Entities/Trade.cs` | Yes — `Router/Entities/TradeTests.cs` (24) | ported |
+| `multicallExtended.ts` | `MulticallExtended.cs` | Yes — `Router/MulticallExtendedTests.cs` (4) | ported |
+| `paymentsExtended.ts` | `PaymentsExtended.cs` | Yes — `Router/PaymentsExtendedTests.cs` (10) | ported |
+| `approveAndCall.ts` | `ApproveAndCall.cs` | via SwapRouter swap-and-add | ported |
+| `swapRouter.ts` | `SwapRouter.cs` (`swapCallParameters` + `swapAndAddCallParameters`) | Yes — `Router/SwapRouterTests.cs` (32) | ported |
+
+### Intentional divergences (router-sdk)
+- **TPool union.** Upstream's `TPool = Pair | V3Pool | V4Pool` is a structural union; C# has none, so a mixed
+  route holds its pools as `object` and `Utils/TPool.cs` provides the uniform accessors upstream reaches via
+  `instanceof` (normalising the V2/V3 token-keyed and V4 currency-keyed surfaces onto `BaseCurrency`). V2/V3/V4
+  price types (`Price<Token,Token>` vs `Price<BaseCurrency,BaseCurrency>`) are rebuilt to a common
+  `Price<BaseCurrency,BaseCurrency>` since C# generics are invariant.
+- **Route wrappers by composition.** Upstream `RouteV2/V3/V4` *extend* the SDK routes; C# can't multiply-inherit
+  the invariant generic `Route<,>`, so the wrappers compose (`.V2Route`/`.V3Route`/`.V4Route`) and expose the
+  `IRoute<TInput,TOutput>` surface. `MixedRoute` still inherits `MixedRouteSDK` (single base). `Trade.FromRoute`
+  therefore also unwraps the wrappers before dispatching.
+- **`SwapRouter.SwapCallParameters(object trades, …)`.** Accepts the heterogeneous `trades` argument upstream
+  models with TS unions: a router `Trade`, a single V2/V3/mixed sub-trade, or a list of them. Polymorphic
+  accessors dispatch over the four trade types. `swapCallParameters` value is `toHex(...)`; `swapAndAdd` value is
+  the decimal `value.toString()` — matching upstream exactly.
+- **ABI encoding.** Tuple/array/`bytes[]` calldata is built with the hand-rolled `V4/Utils/AbiParamEncoder`
+  (Nethereum can't parse ethers tuple type strings) plus `V3/Utils/AbiFunctionEncoder` for selectors; every
+  calldata hex is copied verbatim from the upstream tests and matches byte-for-byte. `MulticallExtended`
+  `Validation` (BigintIsh | string) is modelled as `object?`.
+- **Not ported:** upstream `inputTokenPermit`/`outputTokenPermit` self-permit options and `FeeOptions`-bearing
+  swaps are wired through (`SelfPermit`/`Payments`) but not covered by a dedicated router test here (the permit
+  encoders are already tested under `V3/SelfPermitTests`). The remaining `swapAndAddCallParameters` describe
+  blocks (existing-position, the four approval-type variants, native in/out) are not ported — the single-hop,
+  multi-hop and mixed-route swap-and-add paths are covered and byte-verified.
