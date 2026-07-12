@@ -197,7 +197,77 @@ swapExactTokensForTokens/swapTokensForExactTokens, pull/sweep/unwrap/wrap, mint/
   blocks (existing-position, the four approval-type variants, native in/out) are not ported — the single-hop,
   multi-hop and mixed-route swap-and-add paths are covered and byte-verified.
 
-## 11. flashtestations-sdk port
+## 11. liquidity-launcher-sdk port
+Ported under `src/UniswapSharp/LiquidityLauncher/` → namespace `UniswapSharp.LiquidityLauncher`
+(config under `Config/`). Tests under `test/.../LiquidityLauncher/` — 44 xUnit cases, the direct 1:1
+counterparts of the 9 upstream `.test.ts` files. Toolkit for launching tokens/auctions through the
+Uniswap Liquidity Launcher stack (LiquidityLauncher + LBPStrategy + ContinuousClearingAuction +
+TokenSplitter + uERC20/USUPERC20 factories). All poolIds, salts, CREATE2 addresses and encoded
+calldata are matched to the upstream golden vectors byte-for-byte.
+
+| Upstream `sdks/liquidity-launcher-sdk/src/…` | UniswapSharp `src/UniswapSharp/LiquidityLauncher/…` | Tests ported | Status |
+|---|---|---|---|
+| `chains.ts` | `Chains.cs` (`SupportedChainId`, `IsLaunchSupportedChain`) | via callers | ported |
+| `errors.ts` | `Errors.cs` (`LauncherErrorCode`, `LauncherSdkError`, `IsLauncherSdkError`) | Yes — `ErrorsTests.cs` (3) | ported |
+| `constants.ts` | `Constants.cs` | via callers | ported |
+| `types.ts` | `Types.cs` (records) | via callers | ported |
+| `addresses.ts` | `Addresses.cs` | Yes — `AddressesTests.cs` (13) | ported |
+| `poolId.ts` | `PoolId.cs` (`ComputeLbpPoolId`, `ComputeGraffiti`) | Yes — `PoolIdTests.cs` (3) | ported |
+| `salts.ts` | `Salts.cs` (`ComputeLauncherSalt`, `ComputeInitializerSalt`) | via callers | ported |
+| `encode.ts` | `Encode.cs` | Yes — `EncodeTests.cs` (4) | ported |
+| `build.ts` | `Build.cs` | Yes — `BuildTests.cs` (2) | ported |
+| `lock.ts` | `Lock.cs` | Yes — `LockTests.cs` (5, incl. bytecode-hash pins) | ported |
+| `lockRecipientBytecode.ts` | `LockRecipientBytecode.cs` (3 creation-bytecode constants) | pinned in `LockTests.cs` | ported |
+| `format.ts` | `Format.cs` (`FormatFeePercent`, `FormatTokenAmount`) | via callers | ported |
+| `config/blocks.ts` | `Config/Blocks.cs` | Yes — `Config/BlocksTests.cs` (4) | ported |
+| `config/emission.ts` | `Config/Emission.cs` | Yes — `Config/EmissionTests.cs` (4) | ported |
+| `config/price.ts` | `Config/Price.cs` | Yes — `Config/PriceTests.cs` (5) | ported |
+| `config/fees.ts` | `Config/Fees.cs` (`FeeToTickSpacing`, `ResolvePoolFee`) | via callers | ported |
+| `config/lpAllocation.ts` | `Config/LpAllocation.cs` | via callers | ported |
+| `config/positions.ts` | `Config/Positions.cs` | via callers | ported |
+| `abis.ts` | *(not ported as a surface)* | n/a | skipped |
+| `reads.ts` | *(not ported)* | n/a | skipped |
+| `availability.ts` | *(not ported)* | n/a | skipped |
+
+### Skipped modules (liquidity-launcher-sdk)
+- **`reads.ts`** — on-chain read descriptors + viem `PublicClient` helpers; no `.test.ts`, requires a
+  live provider. Intentionally deferred for live verification later.
+- **`availability.ts`** — fee-tier availability check that composes `reads.ts` against a live client;
+  no `.test.ts`, depends on `reads.ts`. Deferred with it. Its pure inputs (`PoolId.ComputeLbpPoolId`,
+  `Addresses.GetLauncherAddresses`) are ported.
+- **`abis.ts`** — raw ABI JSON blobs for the read surface. Not ported as a standalone surface; the SDK
+  encodes calldata via canonical function selectors (`V3/Utils/AbiFunctionEncoder`) + `AbiParamEncoder`
+  rather than the ethers/viem ABI-JSON path, so the read ABIs are unused here.
+
+### Intentional divergences (liquidity-launcher-sdk)
+- **viem → Nethereum/AbiParamEncoder.** `keccak256` → `Nethereum.Util.Sha3Keccack`;
+  `encodeAbiParameters` / `encodePacked` → the hand-rolled `V4/Utils/AbiParamEncoder` (byte-exact tuple/
+  array/bytes coder); `getCreate2Address` → `Core/Utils/AddressValidator.GetCreate2Address`;
+  `getAddress` (EIP-55 checksum) → `AddressValidator.GetAddress`. `encodeFunctionData` is the selector
+  (`AbiFunctionEncoder.Selector`) + `AbiParamEncoder` args. Solidity `string` params are encoded as their
+  UTF-8 bytes through the `bytes` coder (identical ABI layout) since `AbiParamEncoder` treats a `string`
+  type's value as hex.
+- **Floating point in the config helpers is preserved deliberately.** `config/emission.ts` (the convexity
+  curve `Math.pow(i/rampSteps, 1/alpha)`), `config/blocks.ts` `timeToBlock` (`Math.round(Δseconds /
+  blockTimeSeconds)` with sub-second L2 cadences), and the mps/tick rounding in `config/fees.ts`,
+  `config/lpAllocation.ts` and `config/positions.ts` are IEEE-754 `number` math in the reference. These
+  are UI-config helpers whose block ranges and mps weights the on-chain contracts validate with tolerance,
+  not exact-integer protocol math. Matching upstream **to the digit** therefore requires mirroring the same
+  `double` arithmetic, including a JS-compatible round (`Config/MathJs.Round` = `floor(x + 0.5)`, since
+  JS `Math.round` rounds half toward +∞ whereas C#'s default is banker's rounding). The exact-integer rule
+  is kept for all bigint math (poolId/salt/CREATE2/calldata/price/lpAllocation thresholds). Parity note:
+  cross-platform `Math.Pow` may differ by ≤1 ULP from V8, but the emission algorithm clamps boundaries and
+  absorbs the remainder into the final block, so the invariants (mps sum = `MPS_TOTAL`, contiguous window,
+  large final block) hold regardless — the upstream `emission.test.ts` pins only those invariants, and no
+  golden per-step vector exists.
+- **`Lock` naming.** The class mirrors upstream `lock.ts` → `Lock`, which collides with .NET 9+
+  `System.Threading.Lock` when both namespaces are imported; consumers/tests alias it (`using Lock =
+  UniswapSharp.LiquidityLauncher.Lock;`).
+- **`errors.test.ts` cjs/esm case omitted.** The structural-lookalike test (recognizing a
+  `LauncherSdkError` duplicated across a dual cjs/esm install) has no analogue in a single-assembly C#
+  port; `IsLauncherSdkError` reduces to a type test and the other two cases are ported.
+
+## 12. flashtestations-sdk port
 Ported under `src/UniswapSharp/Flashtestations/` → namespace `UniswapSharp.Flashtestations` (subfolders
 `Types/`, `Crypto/`, `Config/`, `Rpc/`, `Verification/`; tests under `test/.../Flashtestations/`). Verifies
 whether a Unichain block was built by a specific TEE workload: the deterministic core is
