@@ -195,3 +195,69 @@ swapExactTokensForTokens/swapTokensForExactTokens, pull/sweep/unwrap/wrap, mint/
   encoders are already tested under `V3/SelfPermitTests`). The remaining `swapAndAddCallParameters` describe
   blocks (existing-position, the four approval-type variants, native in/out) are not ported — the single-hop,
   multi-hop and mixed-route swap-and-add paths are covered and byte-verified.
+
+## 11. universal-router-sdk port (the capstone package)
+Ported under `src/UniswapSharp/UniversalRouter/` → namespace `UniswapSharp.UniversalRouter` (tests under
+`test/.../UniversalRouter/`). Encodes Universal Router command calldata (V2/V3/V4/mixed swaps, wrap/unwrap,
+fees, Permit2 ingress, Across bridge, SwapProxy) and signed-route EIP-712 payloads, building on
+`UniswapSharp.Router` (aggregated `Trade`), `V4/Utils/V4Planner`, and `AbiParamEncoder`. **142 xUnit cases**;
+all command bytes, per-command ABI inputs, `execute`/`executeSigned`/proxy calldata, and the Permit2
+signature-sanitization round-trip match upstream byte-for-byte.
+
+| Upstream `sdks/universal-router-sdk/src/…` | UniswapSharp `src/UniswapSharp/UniversalRouter/…` | Tests ported | Status |
+|---|---|---|---|
+| `utils/constants.ts` | `Utils/Constants.cs` (`UniversalRouterVersion`, `CHAIN_CONFIGS`, addr/block lookups) | Yes — `Utils/ConstantsTests.cs` (13) | ported |
+| `utils/numbers.ts` | `Utils/Numbers.cs` (`EncodeFeeBips`/`EncodeFee1e18`) | Yes — via `FeeEncodingTests.cs` | ported |
+| `utils/getCurrencyAddress.ts` | `Utils/GetCurrencyAddress.cs` | via callers | ported |
+| `utils/pathCurrency.ts` | `Utils/PathCurrency.cs` | via callers | ported |
+| `utils/toV4URVersion.ts` | `Utils/ToV4URVersion.cs` | Yes — `Utils/ToV4URVersionTests.cs` (5) | ported |
+| `utils/routerCommands.ts` | `Utils/RoutePlanner.cs` (`CommandType`, `COMMAND_DEFINITION`, `V2V3_SWAP_COMMANDS_V2_1_1`, `RoutePlanner`, `CreateCommand`) | Yes — `CommandParserTests`, `PerHopSlippageTests` | ported |
+| `entities/Command.ts` | `Entities/Command.cs` (`ICommand`, `TradeConfig`, `RouterActionType`) | via callers | ported |
+| `entities/actions/uniswap.ts` | `Entities/Actions/UniswapTrade.cs` (+ `Uniswap.cs`: `SwapOptions`, `TokenTransferMode`, `FlatFeeOptions`) | Yes — feeEncoding/swapProxy/nativeErc20/perHop | ported |
+| `entities/actions/unwrapWETH.ts` | *(UnwrapWETH command action — modeled via `EncodeInputTokenOptions`)* | indirect | ported |
+| `entities/actions/across.ts` | `Entities/Actions/Across.cs` (`AcrossV4DepositV3Params`) | Yes — `AcrossTests.cs` (5) | ported |
+| `utils/inputTokens.ts` | `Utils/InputTokens.cs` (`Permit2Permit`, `EncodePermit`, `EncodeInputTokenOptions`) + `Utils/Signatures.cs` | Yes — `Permit2Tests.cs` (4) | ported |
+| `types/encodeSwaps.ts` | `Types/EncodeSwaps.cs` (`SwapSpecification`, `SwapStep`/`V4Action` unions, `Fee`) | Yes — `EncodeSwapsTests.cs` | ported |
+| `utils/encodeV4Action.ts` | `Utils/EncodeV4Action.cs` | Yes — via `EncodeSwapsTests` | ported |
+| `utils/encodeSwapStep.ts` | `Utils/EncodeSwapStep.cs` | Yes — `EncodeSwapsTests.cs` | ported |
+| `utils/computeEncodeSwapsAmounts.ts` | `Utils/ComputeEncodeSwapsAmounts.cs` | Yes — via `EncodeSwapsTests` | ported |
+| `utils/normalizeEncodeSwapsSpec.ts` | `Utils/NormalizeEncodeSwapsSpec.cs` | Yes — via `EncodeSwapsTests` | ported |
+| `utils/validateEncodeSwaps.ts` | `Utils/ValidateEncodeSwaps.cs` | Yes — `EncodeSwapsTests.cs` (~20 rejections) | ported |
+| `utils/routerTradeAdapter.ts` | `Utils/RouterTradeAdapter.cs` | Yes — `RouterTradeAdapterTests.cs` (10) | ported |
+| `utils/eip712.ts` | `Utils/Eip712.cs` (`EXECUTE_SIGNED_TYPES`, domain, nonce) | Yes — `SignedRoutesTests.cs` (7) | ported |
+| `utils/commandParser.ts` | `Utils/CommandParser.cs` (`CommandParser`/`GenericCommandParser`, V3-path subparsers) | Yes — `CommandParserTests` + `CommandParserV4Tests` | ported |
+| `swapRouter.ts` | `SwapRouter.cs` (+ `SwapRouterEncodeSwaps.cs`, `SwapRouterSwapCallParameters.cs`) — `swapCallParameters`, `encodeSwaps`, `getExecuteSignedPayload`/`encodeExecuteSigned`, proxy plan | Yes — many | ported (see divergences) |
+
+### Modules skipped (and why)
+- **`src/contracts/**`** — TypeChain-generated bindings/factories. Not ported; `execute`/`executeSigned`/proxy
+  `execute` and every command's inputs are encoded directly via `AbiFunctionEncoder` (keccak selector) +
+  `AbiParamEncoder` (ethers `defaultAbiCoder` equivalent), matching the upstream ABI byte-for-byte.
+- **The Foundry/`test:forge` Solidity suite** (`test/forge/*.t.sol`, `writeInterop.ts`, `MigratorCallParameters.t.sol`,
+  `SwapERC20CallParameters.t.sol`) — exercises on-chain contracts, not the SDK. `test/forge/interop.json` holds
+  golden calldata the TS `uniswapTrades.test.ts` *registers* (its success-path assertion `compareUniswapTrades`
+  is a no-op; only `methodParameters.value` is asserted in TS).
+- **`swapRouter.ts` `migrateV3ToV4CallParameters`** — covered only by the skipped Foundry `MigratorCallParameters`
+  suite; not ported. (All other `swapRouter.ts` surface is ported.)
+- **Fork-dependent `uniswapTrades.test.ts` cases** (v2/v3/mixed/multi-route/fees describe blocks) — these build
+  trades from `getUniswapPools()`, which RPC-fetches mainnet pool reserves/liquidity at a fork block; those pool
+  states aren't available offline, so the exact amounts (and therefore calldata) can't be reproduced. The
+  **static-pool** surface of the same file *is* ported and byte-verified via the dedicated unit tests
+  (`FeeEncodingTests`, `SwapProxyTests`, `NativeErc20InputTests`, `PerHopSlippageTests`, `RouterTradeAdapterTests`),
+  which cover V2/V3/V4/mixed swap encoding, fees, native/wrapped-native in/out, per-hop slippage, and the adapter.
+
+### Intentional divergences (universal-router-sdk)
+- **`SwapCallParameters(RouterTrade, …)`.** Takes the router-sdk aggregated `Trade<BaseCurrency,BaseCurrency>`
+  directly (upstream's `RouterTrade<Currency,Currency,TradeType>`); the `value` field is `toHex(...)` and matches
+  upstream's `BigNumber.toHexString()` for all non-negative amounts.
+- **Union types.** TS discriminated unions (`SwapStep`, `V4Action`, `Fee`, `PoolInRoute`) become abstract-record
+  hierarchies; `switch`-on-type replaces the `.type`/`.kind`/`.action` string discriminators.
+- **`UniversalRouterVersion`** is an int-backed enum (ordering matches the upstream numeric-string
+  `localeCompare`); `IsAtLeastV2_1_1` and `ToV4URVersion` resolve by the version's string value, so an unknown
+  version (`(UniversalRouterVersion)999`) throws "No v4-sdk URVersion mapping" exactly as the TS `'9.9.9'` case.
+- **Signature sanitization.** `Utils/Signatures.cs` ports ethers' `splitSignature`/`joinSignature` (EIP-2098
+  compact + `v`-as-recovery-id normalization) used by `EncodePermit`; the Permit2 tests sign with Nethereum's
+  `EthECKey.SignAndCalculateV` and confirm the canonical round-trip byte-for-byte against a real signature.
+- **`AbiParamEncoder.ToBigInteger`** now also accepts `0x`-prefixed hex strings (ethers `BigNumberish`
+  compatibility) so fee hex (`encodeFee1e18`) and other hex amounts encode without a decimal-only parse.
+- **`ToV4URVersion`/`EncodeV4Action`** produce the V4 planner's *positional* action tuples (C# `AbiParamEncoder`
+  is positional; ethers matches struct object fields by name) — the encoded bytes are identical.
