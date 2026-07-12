@@ -25,7 +25,7 @@ public sealed class HybridOrderCosignatureError : Exception
 }
 
 /// <summary>Port of uniswapx-sdk <c>order/v4/HybridOrder.ts</c> (<c>UnsignedHybridOrder</c>).</summary>
-public class UnsignedHybridOrder
+public class UnsignedHybridOrder : IOffChainOrder
 {
     internal const string ZeroAddress = "0x0000000000000000000000000000000000000000";
     internal static readonly BigInteger Wad = BigInteger.Pow(10, 18);
