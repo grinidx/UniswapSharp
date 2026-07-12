@@ -126,8 +126,10 @@ place. Remaining work is **Phase B** (V3 feature-parity port) and beyond.
 3. **`CurrencyAmount.ToExact` hardening** - DONE. Reimplemented with exact `BigInteger` arithmetic
    (Decimal.js parity); the old `(decimal)` cast overflowed for large amounts. Hardened test-first,
    incl. a max-uint256 case (`CurrencyAmountTests.cs`).
-4. **NuGet packaging** - DONE (metadata, SourceLink, symbols, MinVer, tag-driven release). To publish,
-   add the `NUGET_API_KEY` secret and push a `v*` tag; `1.0.0` is reserved for V3-parity-complete.
+4. **NuGet packaging** - DONE (metadata, SourceLink, symbols, MinVer `v`-prefixed tag-driven release).
+   Publishing uses **NuGet Trusted Publishing (OIDC, keyless)** via `release.yml`: configure a trusted-publishing
+   policy on nuget.org (owner `grinidx`, repo `UniswapSharp`, workflow `release.yml`), set the `NUGET_USER`
+   repo secret to your nuget.org profile username, then push a `v*` tag. No long-lived API key is stored.
 5. **README + usage example** - DONE (see `README.md` + `docs/PORTING.md`); keep in sync as stubs land.
 6. **V4 (later phase)** - Uniswap V4 reuses V3's concentrated-liquidity math (ticks,
    sqrt-price) and adds the singleton `PoolManager`, hooks and flash accounting. It is
