@@ -145,7 +145,8 @@ Dependency-ordered, test-first phases:
 
 ## 9. Other monorepo packages (parity)
 - **v2-sdk** → `src/UniswapSharp/V2/` (Constants, Errors, Pair [CREATE2 + 997/1000 fee math], Route, Trade, Router). Tests under `test/.../V2/` (92 cases). V2 slippage uses the linear `(1 ± slippage)` form; the V2 Router returns method-name + hex args (it does not ABI-encode calldata).
-- flashtestations-sdk / tamperproof-transactions — **out of scope** (network/DNS/WebCrypto, non-DeFi; no Uniswap deps).
+- **flashtestations-sdk** → `src/UniswapSharp/Flashtestations/` — **ported** (see section 11).
+- tamperproof-transactions — **out of scope** (DNS/WebCrypto, non-DeFi; no Uniswap deps).
 - **permit2-sdk** → `src/UniswapSharp/Permit2/` (Constants, Domain, `Eip712TypedDataEncoder` [ethers `_TypedDataEncoder` port, byte-exact], SignatureTransfer, AllowanceTransfer). 21 cases; 6 EIP-712 hash vectors matched to the digit. `providers/*` (on-chain reads) omitted.
 - **smart-wallet-sdk** → `src/UniswapSharp/SmartWallet/` (Constants/ModeType, Types, CallPlanner/BatchedCallPlanner, SmartWallet [EncodeUserOp/EncodeBatchedCall/EncodeErc7821BatchedCall], Delegation.ParseFromCode). 50 cases; ERC-7821 mode words + `execute` selectors (`0x99e1d016`/`0xe9ae5c53`/`0x8dd7712f`) matched to the digit. `parseAuthorizationList*` (viem ECDSA recovery) omitted.
 
@@ -265,3 +266,47 @@ calldata are matched to the upstream golden vectors byte-for-byte.
 - **`errors.test.ts` cjs/esm case omitted.** The structural-lookalike test (recognizing a
   `LauncherSdkError` duplicated across a dual cjs/esm install) has no analogue in a single-assembly C#
   port; `IsLauncherSdkError` reduces to a type test and the other two cases are ported.
+
+## 12. flashtestations-sdk port
+Ported under `src/UniswapSharp/Flashtestations/` → namespace `UniswapSharp.Flashtestations` (subfolders
+`Types/`, `Crypto/`, `Config/`, `Rpc/`, `Verification/`; tests under `test/.../Flashtestations/`). Verifies
+whether a Unichain block was built by a specific TEE workload: the deterministic core is
+`Workload.ComputeWorkloadId` = `keccak256` over the concatenated TDX measurement registers; the rest is
+EVM JSON-RPC I/O to fetch a block and parse its last transaction's `BlockBuilderProofVerified` event.
+**103 xUnit cases** (all four upstream `test/**` files ported 1:1); the workload IDs are matched to the digit
+against the upstream vectors (incl. the `0x952569f6…` value shared with the flashbots Solidity test).
+
+| Upstream `sdks/flashtestations-sdk/src/…` | UniswapSharp `Flashtestations/…` | Tests ported | Status |
+|---|---|---|---|
+| `types/index.ts` | `Types/*.cs` (`MeasurementRegisters`, `VerificationTypes`, `ChainTypes`, `BlockParameter`, `Errors`) | via callers | ported |
+| `types/validation.ts` | `Types/Validation.cs` | Yes — via `WorkloadTests.cs` | ported |
+| `crypto/workload.ts` | `Crypto/Workload.cs` | Yes — `WorkloadTests.cs` (28) | ported |
+| `config/chains.ts` | `Config/Chains.cs` | Yes — `ChainsTests.cs` (29) | ported |
+| `rpc/abi.ts` | `Rpc/FlashtestationAbi.cs` | via callers | ported |
+| `rpc/client.ts` | `Rpc/RpcClient.cs` (+ `Rpc/EvmRpc.cs`, `Rpc/NethereumEvmRpcClient.cs`) | Yes — `RpcClientTests.cs` (28) | ported |
+| `verification/service.ts` | `Verification/Service.cs` (`FlashtestationService`) | Yes — `ServiceTests.cs` (18) | ported |
+| `cli/**` (`commander`) | *(deferred — console wiring, no upstream tests)* | n/a | deferred |
+
+### Intentional divergences (flashtestations-sdk)
+- **Injectable RPC instead of viem.** viem's `createPublicClient` (`getBlock`/`getTransactionReceipt`/
+  `readContract`) plus the standalone `parseEventLogs` are abstracted behind `IEvmRpcClient` +
+  `IEvmRpcClientFactory` (low-level), and `RpcClient` behind `IRpcClient` + `IRpcClientFactory` (high-level).
+  Tests inject fakes (mirroring the bun `mock.module('viem', …)` / `jest.spyOn(rpcClientModule,'RpcClient')`),
+  so **no test touches the network**. The retry/backoff, connection cache (`RpcClient.ClearCache`, keyed
+  `chainId:rpcUrl`) and error-wrapping (`NetworkError`/`BlockNotFoundError`) are ported faithfully.
+- **Live implementation deferred.** A default `NethereumEvmRpcClient` (wraps `Nethereum.Web3`) is provided so
+  the SDK can run against a real node, but it is **not exercised by tests** — live verification is deferred.
+  Nethereum 6.1.0 has no dedicated `safe`/`finalized` block tag, so those fall back to `latest` in that path.
+- **`string | string[]` registers.** The upstream `mrtd` / `rtmr0` union is modelled by a `HexValues` struct
+  with implicit `string` / `string[]` conversions and an `IsArray` flag (mirroring `Array.isArray`).
+- **Pure deps used for real, not mocked.** The service test mocks `computeAllWorkloadIds` and
+  `getBlockExplorerUrl` in TS; in C# these deterministic functions are called for real (the tests compute the
+  expected workload IDs from the register vectors). The one "empty explorer URL" case uses a real chain
+  (Unichain Alphanet, whose configured explorer URL is empty) rather than mocking the lookup.
+- **Type-enforced singular guard.** The two upstream tests that pass an *array* to the singular
+  `computeWorkloadId` (via a TS `as any` cast) can't be expressed in C# — the singular type's `Mrtd`/`Rtmr0`
+  are `string`. The runtime guard (`"mrtd/rtmr0 must be a single value, not an array"`) is instead exercised
+  directly through `Validation.ValidateSingularWorkloadMeasurementRegisters(WorkloadMeasurementRegisters)`.
+- **CLI deferred.** `src/cli/**` (commander arg-parsing + console output) has no upstream tests and is a
+  console-app concern; it is intentionally not ported. Its pure helpers (`resolveChainConfig`, error-code
+  mapping) can be added later behind the same tested library surface if a .NET CLI is desired.
