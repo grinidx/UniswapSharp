@@ -81,20 +81,20 @@ public sealed class UniswapXOrderParser : OrderParser
             case OrderType.Dutch:
                 return DutchOrder.Parse(order, chainId);
             case OrderType.Dutch_V2:
-            {
-                var cosigned = CosignedV2DutchOrder.Parse(order, chainId);
-                return cosigned.Info.Cosignature == "0x" ? UnsignedV2DutchOrder.Parse(order, chainId) : cosigned;
-            }
+                {
+                    var cosigned = CosignedV2DutchOrder.Parse(order, chainId);
+                    return cosigned.Info.Cosignature == "0x" ? UnsignedV2DutchOrder.Parse(order, chainId) : cosigned;
+                }
             case OrderType.Dutch_V3:
-            {
-                var cosigned = CosignedV3DutchOrder.Parse(order, chainId);
-                return cosigned.Info.Cosignature == "0x" ? UnsignedV3DutchOrder.Parse(order, chainId) : cosigned;
-            }
+                {
+                    var cosigned = CosignedV3DutchOrder.Parse(order, chainId);
+                    return cosigned.Info.Cosignature == "0x" ? UnsignedV3DutchOrder.Parse(order, chainId) : cosigned;
+                }
             case OrderType.Priority:
-            {
-                var cosigned = CosignedPriorityOrder.Parse(order, chainId);
-                return cosigned.Info.Cosignature == "0x" ? UnsignedPriorityOrder.Parse(order, chainId) : cosigned;
-            }
+                {
+                    var cosigned = CosignedPriorityOrder.Parse(order, chainId);
+                    return cosigned.Info.Cosignature == "0x" ? UnsignedPriorityOrder.Parse(order, chainId) : cosigned;
+                }
             default:
                 throw new MissingConfiguration("orderType", orderType.ToString());
         }
@@ -123,10 +123,10 @@ public sealed class UniswapXOrderParser : OrderParser
         switch (orderType)
         {
             case OrderType.Hybrid:
-            {
-                var cosigned = CosignedHybridOrder.Parse(order, chainId);
-                return cosigned.Info.Cosignature == "0x" ? UnsignedHybridOrder.Parse(order, chainId) : cosigned;
-            }
+                {
+                    var cosigned = CosignedHybridOrder.Parse(order, chainId);
+                    return cosigned.Info.Cosignature == "0x" ? UnsignedHybridOrder.Parse(order, chainId) : cosigned;
+                }
             default:
                 throw new MissingConfiguration("v4OrderType", orderType.ToString());
         }
