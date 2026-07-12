@@ -394,6 +394,127 @@ public abstract class SwapRouter
         };
     }
 
+    /// <summary>Produces the calldata + value for a swap-and-add (swap then add liquidity to a V3 position).</summary>
+    public static MethodParameters SwapAndAddCallParameters(
+        object trades,
+        SwapAndAddOptions options,
+        V3.Entities.Position position,
+        CondensedAddLiquidityOptions addLiquidityOptions,
+        ApprovalTypes tokenInApprovalType,
+        ApprovalTypes tokenOutApprovalType)
+    {
+        var r = EncodeSwaps(trades, options, isSwapAndAdd: true);
+        var calldatas = r.Calldatas;
+        var totalAmountSwapped = r.TotalAmountIn;
+
+        if (options.OutputTokenPermit != null)
+        {
+            if (!r.QuoteAmountOut.Currency.IsToken)
+            {
+                throw new InvalidOperationException("NON_TOKEN_PERMIT_OUTPUT");
+            }
+            calldatas.Add(V3.SelfPermit.EncodePermit((Token)r.QuoteAmountOut.Currency, options.OutputTokenPermit));
+        }
+
+        int chainId = TradeChainId(r.SampleTrade);
+        bool zeroForOne = position.Pool.Token0.Wrapped().Address == totalAmountSwapped.Currency.Wrapped().Address;
+        var (positionAmountIn, positionAmountOut) = GetPositionAmounts(position, zeroForOne);
+
+        // if tokens are native they will be converted to WETH9
+        var tokenIn = r.InputIsNative ? Weth9.Tokens[chainId] : positionAmountIn.Currency.Wrapped();
+        var tokenOut = r.OutputIsNative ? Weth9.Tokens[chainId] : positionAmountOut.Currency.Wrapped();
+
+        // if swap output doesn't make up the whole desired balance, pull in the remaining tokens for adding liquidity
+        var amountOutRemaining = positionAmountOut.Subtract(r.QuoteAmountOut.Wrapped()!);
+        if (amountOutRemaining.GreaterThan(CurrencyAmount<Token>.FromRawAmount(positionAmountOut.Currency, 0)))
+        {
+            if (r.OutputIsNative)
+            {
+                calldatas.Add(PaymentsExtended.EncodeWrapETH(amountOutRemaining.Quotient));
+            }
+            else
+            {
+                calldatas.Add(PaymentsExtended.EncodePull(tokenOut, amountOutRemaining.Quotient));
+            }
+        }
+
+        // if input is native, convert to WETH9, else pull ERC20 token
+        if (r.InputIsNative)
+        {
+            calldatas.Add(PaymentsExtended.EncodeWrapETH(positionAmountIn.Quotient));
+        }
+        else
+        {
+            calldatas.Add(PaymentsExtended.EncodePull(tokenIn, positionAmountIn.Quotient));
+        }
+
+        // approve token balances to the NFTManager
+        if (tokenInApprovalType != ApprovalTypes.NOT_REQUIRED)
+        {
+            calldatas.Add(ApproveAndCall.EncodeApprove(tokenIn, tokenInApprovalType));
+        }
+        if (tokenOutApprovalType != ApprovalTypes.NOT_REQUIRED)
+        {
+            calldatas.Add(ApproveAndCall.EncodeApprove(tokenOut, tokenOutApprovalType));
+        }
+
+        // position with token amounts resulting from a swap with maximum slippage (hence minimal amount out possible)
+        var minimalPosition = V3.Entities.Position.FromAmounts(
+            position.Pool,
+            position.TickLower,
+            position.TickUpper,
+            zeroForOne ? position.Amount0.Quotient : r.MinimumAmountOut.Quotient,
+            zeroForOne ? r.MinimumAmountOut.Quotient : position.Amount1.Quotient,
+            UseFullPrecision: false);
+
+        calldatas.Add(ApproveAndCall.EncodeAddLiquidity(position, minimalPosition, addLiquidityOptions, options.SlippageTolerance));
+
+        // sweep remaining tokens
+        calldatas.Add(r.InputIsNative
+            ? PaymentsExtended.EncodeUnwrapWETH9(BigInteger.Zero)
+            : PaymentsExtended.EncodeSweepToken(tokenIn, BigInteger.Zero));
+        calldatas.Add(r.OutputIsNative
+            ? PaymentsExtended.EncodeUnwrapWETH9(BigInteger.Zero)
+            : PaymentsExtended.EncodeSweepToken(tokenOut, BigInteger.Zero));
+
+        BigInteger value;
+        if (r.InputIsNative)
+        {
+            value = totalAmountSwapped.Wrapped()!.Add(positionAmountIn.Wrapped()!).Quotient;
+        }
+        else if (r.OutputIsNative)
+        {
+            value = amountOutRemaining.Quotient;
+        }
+        else
+        {
+            value = BigInteger.Zero;
+        }
+
+        return new MethodParameters
+        {
+            Calldata = MulticallExtended.EncodeMulticall(calldatas, options.DeadlineOrPreviousBlockhash),
+            Value = value.ToString(),
+        };
+    }
+
+    private static (CurrencyAmount<Token> positionAmountIn, CurrencyAmount<Token> positionAmountOut) GetPositionAmounts(
+        V3.Entities.Position position, bool zeroForOne)
+    {
+        var (amount0, amount1) = position.MintAmounts;
+        var currencyAmount0 = CurrencyAmount<Token>.FromRawAmount(position.Pool.Token0, amount0);
+        var currencyAmount1 = CurrencyAmount<Token>.FromRawAmount(position.Pool.Token1, amount1);
+        return zeroForOne ? (currencyAmount0, currencyAmount1) : (currencyAmount1, currencyAmount0);
+    }
+
+    private static int TradeChainId(object trade) => trade switch
+    {
+        V2TradeT v2 => v2.Route.ChainId,
+        V3TradeT v3 => v3.Swaps[0].Route.ChainId,
+        MixedTradeT m => m.Swaps[0].Route.ChainId,
+        _ => throw new ArgumentException("Unsupported trade"),
+    };
+
     private static bool RiskOfPartialFill(object trades)
     {
         if (trades is IEnumerable enumerable and not string and not RouterTradeT)
