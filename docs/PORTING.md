@@ -151,7 +151,7 @@ Dependency-ordered, test-first phases:
 
 ## 10. router-sdk port
 Ported under `src/UniswapSharp/Router/` → namespace `UniswapSharp.Router` (tests under `test/.../Router/`).
-Aggregates V2/V3/V4/mixed routes and encodes SwapRouter02 calldata. 193 xUnit cases; all calldata is
+Aggregates V2/V3/V4/mixed routes and encodes SwapRouter02 calldata. 196 xUnit cases; all calldata is
 byte-verified against the upstream `.test.ts` expected values (multicall, exactInput(Single)/exactOutput(Single),
 swapExactTokensForTokens/swapTokensForExactTokens, pull/sweep/unwrap/wrap, mint/increaseLiquidity).
 
