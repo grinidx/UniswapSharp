@@ -118,7 +118,7 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
 Record the new upstream commit, `git -C /home/devops/uniswap-sdks-official log --oneline <old>..<new> -- sdks/v3-sdk sdks/sdk-core`,
 port the deltas test-first, and bump the pinned commit above.
 
-## 8. v4-sdk port (in progress)
+## 8. v4-sdk port (complete)
 Reuses V3 concentrated-liquidity math; additive under `src/UniswapSharp/V4/` (tests under `test/UniswapSharp.Testing/V4/`).
 Dependency-ordered, test-first phases:
 

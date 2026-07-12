@@ -1,24 +1,51 @@
 # UniswapSharp
 
 [![CI](https://github.com/grinidx/UniswapSharp/actions/workflows/ci.yml/badge.svg)](https://github.com/grinidx/UniswapSharp/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/UniswapSharp.svg)](https://www.nuget.org/packages/UniswapSharp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 
-A C#/.NET port of the official Uniswap SDKs — the [`@uniswap/sdk-core`](https://github.com/Uniswap/sdks/tree/main/sdks/sdk-core)
-and [`@uniswap/v3-sdk`](https://github.com/Uniswap/sdks/tree/main/sdks/v3-sdk) TypeScript packages.
-Model currencies, tokens, pools, positions, routes and trades; run the tick / sqrt-price / swap /
-liquidity math; and encode calldata for the Uniswap V3 periphery — all with exact `BigInteger` /
-`BigRational` arithmetic (no floating point in protocol math).
+A C#/.NET port of the official Uniswap SDK monorepo — the [`Uniswap/sdks`](https://github.com/Uniswap/sdks)
+TypeScript packages. Model currencies, tokens, pools, positions, routes and trades; run the tick /
+sqrt-price / swap / liquidity math; build calldata for the V3/V4 periphery and the Universal Router;
+and hash/sign Permit2 and UniswapX orders — all with exact `BigInteger` / `BigRational` arithmetic
+(**no floating point in protocol math**).
 
-> **Status:** V3 core (entities + math) is ported and unit-tested against upstream. A few calldata
-> builders are being completed; not yet published to NuGet. See [docs/PORTING.md](docs/PORTING.md).
+Namespaces and file names deliberately mirror the upstream TypeScript so the two read side by side,
+and behaviour is verified **to the digit** against the upstream `.test.ts` vectors.
+
+> **Status:** the full monorepo surface is ported and green — **1,694 xUnit tests, 0 failing**, on
+> Linux / Windows / macOS. See [docs/PORTING.md](docs/PORTING.md) for the file-by-file mapping,
+> methodology, and every intentional divergence.
+
+## Packages
+
+Everything ships in the single **`UniswapSharp`** NuGet package, organised into namespaces that mirror
+the upstream packages:
+
+| Namespace | Upstream package | What's in it |
+|---|---|---|
+| `UniswapSharp.Core` | `@uniswap/sdk-core` | `Token`, `Ether`, `Fraction`/`Percent`/`Price`/`CurrencyAmount`, chain registry, addresses, WETH9 |
+| `UniswapSharp.V2` | `@uniswap/v2-sdk` | `Pair` (CREATE2 + fee math), `Route`, `Trade`, `Router` |
+| `UniswapSharp.V3` | `@uniswap/v3-sdk` | `Pool`, `Position`, `Route`, `Trade`, `Tick`, tick/sqrt-price/swap/liquidity math, periphery calldata |
+| `UniswapSharp.V4` | `@uniswap/v4-sdk` | currency-based `Pool`/`Position`/`Route`/`Trade`, hooks, `V4Planner`, `PositionManager` |
+| `UniswapSharp.Router` | `@uniswap/router-sdk` | mixed v2+v3+v4 routes, aggregated `Trade`, SwapRouter02 calldata |
+| `UniswapSharp.UniversalRouter` | `@uniswap/universal-router-sdk` | `RoutePlanner`, `RouterTradeAdapter`, `SwapRouter`, signed-route EIP-712 |
+| `UniswapSharp.UniswapX` | `@uniswap/uniswapx-sdk` | Dutch/Priority/Relay/V3/Hybrid orders, decay math, builders, trades, EIP-712 witness hashing |
+| `UniswapSharp.Permit2` | `@uniswap/permit2-sdk` | `SignatureTransfer`, `AllowanceTransfer`, byte-exact EIP-712 typed-data encoder |
+| `UniswapSharp.SmartWallet` | `@uniswap/smart-wallet-sdk` | ERC-7821 call planners + encoders |
+| `UniswapSharp.LiquidityLauncher` | `@uniswap/liquidity-launcher-sdk` | launch-config math, CREATE2 poolId/salts, calldata encoding |
+| `UniswapSharp.Flashtestations` | `@uniswap/flashtestations-sdk` | TEE workload-ID (keccak) + block verification (injectable RPC) |
+| `UniswapSharp.Tamperproof` | `@uniswap/tamperproof-transactions` | EIP-7754 sign/verify (RSA/ECDSA/Ed25519), canonical JSON, DNS-over-HTTPS (injectable) |
 
 ## Install
 
 ```bash
 dotnet add package UniswapSharp
 ```
-_(Available once the first version is published; until then, build from source.)_
+
+Targets **.NET 10** (`net10.0`). Depends on Nethereum (ABI/keccak/CREATE2/EIP-712) and
+ExtendedNumerics.BigRational for exact rational arithmetic.
 
 ## Quickstart
 
@@ -53,8 +80,10 @@ USDC/WETH 0.3% pool: 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8
 1 WETH = 2000 USDC
 ```
 
-Full swap quoting and position math work against tick data; see the tests under
-`test/UniswapSharp.Testing/V3` for end-to-end examples.
+Swap quoting, position math, and calldata builders across all the namespaces above work the same way.
+The test suite under `test/UniswapSharp.Testing/` mirrors the source tree and doubles as an
+end-to-end example library — e.g. `V3/SwapRouterTests`, `V4/`, `Router/`, `UniversalRouter/`,
+`UniswapX/`, and `Permit2/` show calldata and signing round-trips against the upstream vectors.
 
 ## Building & testing
 
@@ -63,11 +92,14 @@ dotnet build -c Release
 dotnet test  -c Release
 ```
 
+The projects target `net10.0` and require the .NET 10 SDK.
+
 ## How it maps to upstream
 
-Namespaces and file names deliberately mirror the TypeScript so the two read side by side:
-`@uniswap/sdk-core` → `UniswapSharp.Core`, `@uniswap/v3-sdk` → `UniswapSharp.V3`. The full
-file-by-file mapping and porting methodology are in [docs/PORTING.md](docs/PORTING.md).
+Each `UniswapSharp.*` namespace corresponds one-to-one with an upstream package (see the table above).
+The complete file-by-file mapping, the test-first porting methodology, and every intentional
+divergence (e.g. injectable RPC/DNS where upstream uses live network I/O) are documented in
+[docs/PORTING.md](docs/PORTING.md).
 
 ## Contributing
 
