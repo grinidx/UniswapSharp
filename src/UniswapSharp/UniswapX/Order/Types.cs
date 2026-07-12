@@ -68,6 +68,21 @@ public sealed record DutchOutput
     public required string Recipient { get; set; }
 }
 
+/// <summary>JSON form of a dutch output (uniswapx-sdk <c>DutchOutputJSON</c>).</summary>
+public sealed record DutchOutputJSON(string Token, string StartAmount, string EndAmount, string Recipient);
+
+/// <summary>JSON form of a dutch input (uniswapx-sdk <c>DutchInputJSON</c>).</summary>
+public sealed record DutchInputJSON(string Token, string StartAmount, string EndAmount);
+
+/// <summary>JSON form of V2 cosigner data (uniswapx-sdk <c>CosignerDataJSON</c>).</summary>
+public sealed record CosignerDataJSON(
+    long DecayStartTime,
+    long DecayEndTime,
+    string ExclusiveFiller,
+    long ExclusivityOverrideBps,
+    string InputOverride,
+    IReadOnlyList<string> OutputOverrides);
+
 /// <summary>A dutch input (uniswapx-sdk <c>DutchInput</c>).</summary>
 public sealed record DutchInput
 {
