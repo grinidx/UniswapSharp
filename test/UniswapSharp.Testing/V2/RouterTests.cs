@@ -1,6 +1,7 @@
 using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.V2;
+using V2Router = UniswapSharp.V2.Router;
 using UniswapSharp.V2.Entities;
 
 namespace UniswapSharp.Testing.V2;
@@ -43,7 +44,7 @@ public class RouterTests
     [Fact]
     public void ExactIn_EtherToToken1()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Ether, Token>.ExactIn(new Route<Ether, Token>(new List<Pair> { pair_weth_0, pair_0_1 }, ETHER, token1), CAE(100)),
             Opts(ttl: 50));
         Assert.Equal("swapExactETHForTokens", result.MethodName);
@@ -57,7 +58,7 @@ public class RouterTests
     [Fact]
     public void ExactIn_DeadlineSpecified()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Ether, Token>.ExactIn(new Route<Ether, Token>(new List<Pair> { pair_weth_0, pair_0_1 }, ETHER, token1), CAE(100)),
             Opts(deadline: 50));
         Assert.Equal("swapExactETHForTokens", result.MethodName);
@@ -71,7 +72,7 @@ public class RouterTests
     [Fact]
     public void ExactIn_Token1ToEther()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Token, Ether>.ExactIn(new Route<Token, Ether>(new List<Pair> { pair_0_1, pair_weth_0 }, token1, ETHER), CA(token1, 100)),
             Opts(ttl: 50));
         Assert.Equal("swapExactTokensForETH", result.MethodName);
@@ -86,7 +87,7 @@ public class RouterTests
     [Fact]
     public void ExactIn_Token0ToToken1()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Token, Token>.ExactIn(new Route<Token, Token>(new List<Pair> { pair_0_1 }, token0, token1), CA(token0, 100)),
             Opts(ttl: 50));
         Assert.Equal("swapExactTokensForTokens", result.MethodName);
@@ -103,7 +104,7 @@ public class RouterTests
     [Fact]
     public void ExactOut_EtherToToken1()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Ether, Token>.ExactOut(new Route<Ether, Token>(new List<Pair> { pair_weth_0, pair_0_1 }, ETHER, token1), CA(token1, 100)),
             Opts(ttl: 50));
         Assert.Equal("swapETHForExactTokens", result.MethodName);
@@ -117,7 +118,7 @@ public class RouterTests
     [Fact]
     public void ExactOut_Token1ToEther()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Token, Ether>.ExactOut(new Route<Token, Ether>(new List<Pair> { pair_0_1, pair_weth_0 }, token1, ETHER), CAE(100)),
             Opts(ttl: 50));
         Assert.Equal("swapTokensForExactETH", result.MethodName);
@@ -132,7 +133,7 @@ public class RouterTests
     [Fact]
     public void ExactOut_Token0ToToken1()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Token, Token>.ExactOut(new Route<Token, Token>(new List<Pair> { pair_0_1 }, token0, token1), CA(token1, 100)),
             Opts(ttl: 50));
         Assert.Equal("swapTokensForExactTokens", result.MethodName);
@@ -149,7 +150,7 @@ public class RouterTests
     [Fact]
     public void Fot_ExactIn_EtherToToken1()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Ether, Token>.ExactIn(new Route<Ether, Token>(new List<Pair> { pair_weth_0, pair_0_1 }, ETHER, token1), CAE(100)),
             Opts(ttl: 50, feeOnTransfer: true));
         Assert.Equal("swapExactETHForTokensSupportingFeeOnTransferTokens", result.MethodName);
@@ -163,7 +164,7 @@ public class RouterTests
     [Fact]
     public void Fot_ExactIn_Token1ToEther()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Token, Ether>.ExactIn(new Route<Token, Ether>(new List<Pair> { pair_0_1, pair_weth_0 }, token1, ETHER), CA(token1, 100)),
             Opts(ttl: 50, feeOnTransfer: true));
         Assert.Equal("swapExactTokensForETHSupportingFeeOnTransferTokens", result.MethodName);
@@ -178,7 +179,7 @@ public class RouterTests
     [Fact]
     public void Fot_ExactIn_Token0ToToken1()
     {
-        var result = Router.SwapCallParameters(
+        var result = V2Router.SwapCallParameters(
             Trade<Token, Token>.ExactIn(new Route<Token, Token>(new List<Pair> { pair_0_1 }, token0, token1), CA(token0, 100)),
             Opts(ttl: 50, feeOnTransfer: true));
         Assert.Equal("swapExactTokensForTokensSupportingFeeOnTransferTokens", result.MethodName);
@@ -195,7 +196,7 @@ public class RouterTests
     [Fact]
     public void Fot_ExactOut_EtherToToken1_Throws()
     {
-        var ex = Assert.Throws<ArgumentException>(() => Router.SwapCallParameters(
+        var ex = Assert.Throws<ArgumentException>(() => V2Router.SwapCallParameters(
             Trade<Ether, Token>.ExactOut(new Route<Ether, Token>(new List<Pair> { pair_weth_0, pair_0_1 }, ETHER, token1), CA(token1, 100)),
             Opts(ttl: 50, feeOnTransfer: true)));
         Assert.Equal("EXACT_OUT_FOT", ex.Message);
@@ -204,7 +205,7 @@ public class RouterTests
     [Fact]
     public void Fot_ExactOut_Token1ToEther_Throws()
     {
-        var ex = Assert.Throws<ArgumentException>(() => Router.SwapCallParameters(
+        var ex = Assert.Throws<ArgumentException>(() => V2Router.SwapCallParameters(
             Trade<Token, Ether>.ExactOut(new Route<Token, Ether>(new List<Pair> { pair_0_1, pair_weth_0 }, token1, ETHER), CAE(100)),
             Opts(ttl: 50, feeOnTransfer: true)));
         Assert.Equal("EXACT_OUT_FOT", ex.Message);
@@ -213,7 +214,7 @@ public class RouterTests
     [Fact]
     public void Fot_ExactOut_Token0ToToken1_Throws()
     {
-        var ex = Assert.Throws<ArgumentException>(() => Router.SwapCallParameters(
+        var ex = Assert.Throws<ArgumentException>(() => V2Router.SwapCallParameters(
             Trade<Token, Token>.ExactOut(new Route<Token, Token>(new List<Pair> { pair_0_1 }, token0, token1), CA(token1, 100)),
             Opts(ttl: 50, feeOnTransfer: true)));
         Assert.Equal("EXACT_OUT_FOT", ex.Message);
