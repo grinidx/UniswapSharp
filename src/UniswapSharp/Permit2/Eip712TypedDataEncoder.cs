@@ -47,6 +47,26 @@ public static class Eip712TypedDataEncoder
         return "0x" + ToHex(Hash(domain, types, message));
     }
 
+    /// <summary>
+    /// Returns the struct hash of the primary type (auto-detected) for the given type set and message,
+    /// matching ethers' <c>_TypedDataEncoder.from(types).hash(value)</c> (i.e. <c>keccak256(encodeData(primaryType, value))</c>).
+    /// </summary>
+    public static byte[] HashStruct(
+        IReadOnlyDictionary<string, IReadOnlyList<TypedDataField>> types,
+        IReadOnlyDictionary<string, object?> message)
+    {
+        var encoder = new StructEncoder(types);
+        return encoder.HashStruct(encoder.PrimaryType, message);
+    }
+
+    /// <summary>Returns <see cref="HashStruct"/> as a lower-case <c>0x</c>-prefixed hex string.</summary>
+    public static string HashStructHex(
+        IReadOnlyDictionary<string, IReadOnlyList<TypedDataField>> types,
+        IReadOnlyDictionary<string, object?> message)
+    {
+        return "0x" + ToHex(HashStruct(types, message));
+    }
+
     /// <summary>Computes the EIP-712 domain separator for <paramref name="domain"/>.</summary>
     internal static byte[] HashDomain(Eip712Domain domain)
     {

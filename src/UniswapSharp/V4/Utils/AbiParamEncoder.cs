@@ -399,6 +399,12 @@ internal static class AbiTypeParser
             return new ArrayType { Element = element, Length = inner.Length == 0 ? null : int.Parse(inner) };
         }
 
+        // Accept the ethers "tuple(...)" spelling in addition to the bare "(...)" form.
+        if (type.StartsWith("tuple("))
+        {
+            type = type["tuple".Length..];
+        }
+
         if (type.StartsWith("("))
         {
             string inner = type.Substring(1, type.Length - 2);
