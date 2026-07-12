@@ -82,20 +82,20 @@ public static class TPool
         switch (pool)
         {
             case V2Pair pair:
-            {
-                var (output, _) = pair.GetOutputAmount(ToTokenAmount(inputAmount));
-                return output.AsBaseCurrency()!;
-            }
+                {
+                    var (output, _) = pair.GetOutputAmount(ToTokenAmount(inputAmount));
+                    return output.AsBaseCurrency()!;
+                }
             case V3Pool v3:
-            {
-                var (output, _) = await v3.GetOutputAmount(ToTokenAmount(inputAmount));
-                return output.AsBaseCurrency()!;
-            }
+                {
+                    var (output, _) = await v3.GetOutputAmount(ToTokenAmount(inputAmount));
+                    return output.AsBaseCurrency()!;
+                }
             case V4Pool v4:
-            {
-                var (output, _) = await v4.GetOutputAmount(inputAmount);
-                return output;
-            }
+                {
+                    var (output, _) = await v4.GetOutputAmount(inputAmount);
+                    return output;
+                }
             default:
                 throw new ArgumentException(UnsupportedMessage(pool));
         }

@@ -8,15 +8,15 @@ using UniswapSharp.Router.Entities;
 using UniswapSharp.Router.Entities.MixedRoute;
 using UniswapSharp.Router.Utils;
 using UniswapSharp.V3.Utils;
+using FeeAmount = UniswapSharp.V3.Constants.FeeAmount;
+using Tick = UniswapSharp.V3.Entities.Tick;
 using V2Pair = UniswapSharp.V2.Entities.Pair;
 using V2Route = UniswapSharp.V2.Entities.Route<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
+using V3Constants = UniswapSharp.V3.Constants;
 using V3Pool = UniswapSharp.V3.Entities.Pool;
 using V3Route = UniswapSharp.V3.Entities.Route<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
 using V4Pool = UniswapSharp.V4.Entities.Pool;
 using V4Route = UniswapSharp.V4.Entities.Route<UniswapSharp.Core.Entities.BaseCurrency, UniswapSharp.Core.Entities.BaseCurrency>;
-using Tick = UniswapSharp.V3.Entities.Tick;
-using V3Constants = UniswapSharp.V3.Constants;
-using FeeAmount = UniswapSharp.V3.Constants.FeeAmount;
 
 namespace UniswapSharp.Testing.Router.Entities;
 

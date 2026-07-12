@@ -1,8 +1,8 @@
 using UniswapSharp.Core.Entities;
 using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.V2;
-using V2Router = UniswapSharp.V2.Router;
 using UniswapSharp.V2.Entities;
+using V2Router = UniswapSharp.V2.Router;
 
 namespace UniswapSharp.Testing.V2;
 

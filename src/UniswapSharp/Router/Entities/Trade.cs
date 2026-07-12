@@ -327,29 +327,29 @@ public class Trade<TInput, TOutput>
         switch (underlying)
         {
             case V2.Entities.Route<TInput, TOutput> routev2:
-            {
-                var t = new V2.Entities.Trade<TInput, TOutput>(routev2, amount, tradeType);
-                swap = new RouterSwap<TInput, TOutput>(new RouteV2<TInput, TOutput>(routev2), t.InputAmount, t.OutputAmount);
-                break;
-            }
+                {
+                    var t = new V2.Entities.Trade<TInput, TOutput>(routev2, amount, tradeType);
+                    swap = new RouterSwap<TInput, TOutput>(new RouteV2<TInput, TOutput>(routev2), t.InputAmount, t.OutputAmount);
+                    break;
+                }
             case V3.Entities.Route<TInput, TOutput> routev3:
-            {
-                var t = await V3.Entities.Trade<TInput, TOutput>.FromRoute(routev3, amount, tradeType);
-                swap = new RouterSwap<TInput, TOutput>(new RouteV3<TInput, TOutput>(routev3), t.InputAmount, t.OutputAmount);
-                break;
-            }
+                {
+                    var t = await V3.Entities.Trade<TInput, TOutput>.FromRoute(routev3, amount, tradeType);
+                    swap = new RouterSwap<TInput, TOutput>(new RouteV3<TInput, TOutput>(routev3), t.InputAmount, t.OutputAmount);
+                    break;
+                }
             case V4.Entities.Route<TInput, TOutput> routev4:
-            {
-                var t = await V4.Entities.Trade<TInput, TOutput>.FromRoute(routev4, amount, tradeType);
-                swap = new RouterSwap<TInput, TOutput>(new RouteV4<TInput, TOutput>(routev4), t.InputAmount, t.OutputAmount);
-                break;
-            }
+                {
+                    var t = await V4.Entities.Trade<TInput, TOutput>.FromRoute(routev4, amount, tradeType);
+                    swap = new RouterSwap<TInput, TOutput>(new RouteV4<TInput, TOutput>(routev4), t.InputAmount, t.OutputAmount);
+                    break;
+                }
             case MixedRouteSDK<TInput, TOutput> mixedRoute:
-            {
-                var t = await MixedRouteTrade<TInput, TOutput>.FromRoute(mixedRoute, ToInputAmount(amount), tradeType);
-                swap = new RouterSwap<TInput, TOutput>(new MixedRoute<TInput, TOutput>(mixedRoute), t.InputAmount, t.OutputAmount);
-                break;
-            }
+                {
+                    var t = await MixedRouteTrade<TInput, TOutput>.FromRoute(mixedRoute, ToInputAmount(amount), tradeType);
+                    swap = new RouterSwap<TInput, TOutput>(new MixedRoute<TInput, TOutput>(mixedRoute), t.InputAmount, t.OutputAmount);
+                    break;
+                }
             default:
                 throw new ArgumentException("Invalid route type");
         }

@@ -5,12 +5,12 @@ using UniswapSharp.Core.Entities.Fractions;
 using UniswapSharp.Core.Utils;
 using UniswapSharp.Router.Entities.MixedRoute;
 using UniswapSharp.V3.Utils;
+using FeeAmount = UniswapSharp.V3.Constants.FeeAmount;
+using Tick = UniswapSharp.V3.Entities.Tick;
 using V2Pair = UniswapSharp.V2.Entities.Pair;
+using V3Constants = UniswapSharp.V3.Constants;
 using V3Pool = UniswapSharp.V3.Entities.Pool;
 using V4Pool = UniswapSharp.V4.Entities.Pool;
-using Tick = UniswapSharp.V3.Entities.Tick;
-using V3Constants = UniswapSharp.V3.Constants;
-using FeeAmount = UniswapSharp.V3.Constants.FeeAmount;
 
 namespace UniswapSharp.Testing.Router.Entities.MixedRoute;
 
