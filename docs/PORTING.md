@@ -195,3 +195,68 @@ swapExactTokensForTokens/swapTokensForExactTokens, pull/sweep/unwrap/wrap, mint/
   encoders are already tested under `V3/SelfPermitTests`). The remaining `swapAndAddCallParameters` describe
   blocks (existing-position, the four approval-type variants, native in/out) are not ported — the single-hop,
   multi-hop and mixed-route swap-and-add paths are covered and byte-verified.
+
+## 11. uniswapx-sdk port
+Ported under `src/UniswapSharp/UniswapX/` → namespace `UniswapSharp.UniswapX` (tests under
+`test/.../UniswapX/`, ~180 xUnit cases). Off-chain UniswapX orders: EIP-712 witness hashing +
+`serialize()`/`parse()`, decay math, order builders and high-level trades. The permit2 witness
+hashing reuses `Permit2.SignatureTransfer` + `Permit2.Eip712TypedDataEncoder`; all ABI
+tuple/`bytes` encoding reuses `V4/Utils/AbiParamEncoder`.
+
+| Upstream `sdks/uniswapx-sdk/src/…` | UniswapSharp `src/UniswapSharp/UniswapX/…` | Tests ported | Status |
+|---|---|---|---|
+| `constants.ts` (+ test), `constants/v4.ts` | `Constants.cs`, `ConstantsV4.cs` | Yes — `ConstantsTests.cs` (10) | ported |
+| `errors.ts` | `Errors.cs` (`MissingConfiguration`) | via callers | ported |
+| `utils/dutchDecay.ts` (+ test) | `Utils/DutchDecay.cs` | Yes — `DutchDecayTests.cs` (6) | ported |
+| `utils/dutchBlockDecay.ts` (+ test) | `Utils/DutchBlockDecay.cs` (`NonLinearDutchDecayLib`) | Yes — `DutchBlockDecayTests.cs` (13) | ported |
+| `order/types.ts`, `order/v4/types.ts` | `Order/Types.cs`, `Order/V4/Types.cs` | via callers | ported |
+| `order/validation.ts` (+ test) | `Order/Validation.cs` | Yes — `ValidationTests.cs` (4) | ported |
+| `order/DutchOrder.ts` (+ test) | `Order/DutchOrder.cs` | Yes — `DutchOrderTests.cs` (10) | ported |
+| `order/RelayOrder.ts` (+ test) | `Order/RelayOrder.cs` (batch permit witness) | Yes — `RelayOrderTests.cs` (6) | ported |
+| `order/V2DutchOrder.ts` (+ test) | `Order/V2DutchOrder.cs` (Unsigned/Cosigned) | Yes — `V2DutchOrderTests.cs` (7) | ported |
+| `order/V3DutchOrder.ts` (+ test) | `Order/V3DutchOrder.cs` (nonlinear block decay) | Yes — `V3DutchOrderTests.cs` (9) | ported |
+| `order/PriorityOrder.ts` (+ test) | `Order/PriorityOrder.cs` | Yes — `PriorityOrderTests.cs` (4) | ported |
+| `order/v4/HybridOrder.ts` (+ test), `order/v4/hashing.ts` | `Order/V4/HybridOrder.cs`, `Order/V4/Hashing.cs` | Yes — `HybridOrderTests.cs` (11) | ported |
+| `utils/order.ts` (+ test) | `Utils/OrderUtils.cs` (free fns) + `Utils/OrderParser.cs` (`UniswapXOrderParser`/`RelayOrderParser`) | Yes — `OrderUtilsTests.cs` (34) | ported |
+| `builder/OrderBuilder.ts` + `builder/{Dutch,Relay,V2Dutch,V3Dutch,Priority,Hybrid}OrderBuilder.ts` | `Builder/*.cs` | Yes — via `OrderUtilsTests.cs` (build→serialize→parse round-trips for all 6) | ported |
+| `trade/utils.ts` + `trade/{Dutch,V2Dutch,V3Dutch,Priority,Relay,Hybrid}OrderTrade.ts` | `Trade/*.cs` | Yes — `{Dutch,V2Dutch,V3Dutch,Priority,Relay}OrderTradeTests.cs` (33) | ported |
+| `utils/NonceManager.ts` (+ test) | `Utils/NonceManager.cs` (pure fns + injectable `INonceLookup`) | Yes — `NonceManagerTests.cs` (28) | ported |
+
+### Skipped (uniswapx-sdk)
+- **`contracts/**`** (40+ TypeChain-generated bindings + `__factory` tree) — ethers codegen; **not ported**.
+  Where a reactor/permit ABI is needed it is encoded directly with `AbiParamEncoder`/Nethereum from the
+  canonical order-struct types.
+- **Network-only utils with no `.test.ts`** — `utils/EventWatcher.ts`, `utils/OrderQuoter.ts`,
+  `utils/OrderValidator.ts`, `utils/PermissionedTokenValidator.ts`, `utils/multicall.ts` — need live
+  providers/contracts and have no deterministic vectors; **intentionally deferred** (live-verification later).
+  The small deterministic `ResolvedUniswapXOrder`/`ResolvedRelayOrder` shapes that `order.resolve()` returns
+  were lifted from `OrderQuoter.ts` into `Order/Types.cs`.
+- **DCA-intent hashing** in `order/v4/hashing.ts` (`hashDCAIntent`, `hashPrivateIntent`, `hashDCACosignerData`,
+  `hashOutputAllocation(s)`, `hashFeedInfo(Array)`, `DCA_INTENT_TYPES`) — there is no DCA order class or
+  `.test.ts`, so these are **deferred**. The hybrid-order hashing and the re-exported `ORDER_INFO_V4_TYPE_HASH`
+  / `DCA_COSIGNER_DATA_TYPE_HASH` constants **are** ported.
+- **HybridOrderTrade** class is ported (`Trade/HybridOrderTrade.cs`) but has no upstream `.test.ts` (none exists);
+  covered indirectly by the `HybridOrder` + resolve tests.
+
+### Intentional divergences (uniswapx-sdk)
+- **Order-hash form.** `order.hash()` is ethers `_TypedDataEncoder.from(TYPES).hash(value)` =
+  `keccak256(encodeData(primaryType, value))`; exposed as `Eip712TypedDataEncoder.HashStruct`/`HashStructHex`
+  (added to the permit2 encoder). No upstream test ships a golden order-hash hex — parity is structural
+  (upstream type strings + encodeData layout) plus sign→recover round-trips for every signed/cosigned path.
+- **Signature recovery.** `getSigner` and `recoverCosigner` use Nethereum `EthECKey`: raw digest recovery for
+  the permit signer and for V3/Hybrid cosignatures (`ethers.recoverAddress`), EIP-191 personal-message recovery
+  (`EthereumMessageSigner`) for V2/Priority cosignatures (`ethers.verifyMessage`).
+- **ABI `tuple(...)` spelling.** `V4/Utils/AbiTypeParser` now also accepts ethers' `tuple(...)` prefix (additive;
+  existing bare-paren `(...)` usage in V4/Router is unaffected), so order ABI strings are ported verbatim.
+- **Builders.** C# can't reproduce the TS covariant fluent-return through an abstract `OrderBuilder`, so each of
+  the six builders is self-contained (it inlines the small shared `OrderInfo` validate/build helper) rather than
+  inheriting a base class. Behaviour and invariant messages match upstream.
+- **Trades.** The TS phantom `TTradeType` generic is dropped (`TradeType` is a field); the two remaining generics
+  are constrained to sdk-core `BaseCurrency`. The two reflection-based `getExpectedAmountIn/Out`-throw tests in
+  `V3DutchOrderTrade.test.ts` are omitted (private methods); the public fallback behaviour is covered.
+- **Mutable order info.** Order `info` types are records with `get; set;` + `List<>` so upstream in-place
+  mutations (`info.outputs.push(...)`, `info.universalRouterCalldata = ...`) and builder mutation work; test
+  equality uses AwesomeAssertions `BeEquivalentTo` (deep) rather than record `Equals`.
+- **`REVERSE_REACTOR_MAPPING` / `REVERSE_RESOLVER_MAPPING`** are mutable `Dictionary` statics (mirroring the JS
+  objects the tests patch) and are built iterating chain ids in ascending-numeric order to match JS integer-key
+  iteration.
