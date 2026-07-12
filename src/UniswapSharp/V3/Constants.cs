@@ -10,8 +10,12 @@ public static class Constants
     public const string FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
     public const string ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 
+    // Canonical mainnet V3 pool init code hash — the source of truth shared by the method below
+    // and the obsolete public constant kept for backward compatibility.
+    private const string MAINNET_POOL_INIT_CODE_HASH = "0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54";
+
     [Obsolete("Please use PoolInitCodeHash(ChainId chainId) instead")]
-    public const string POOL_INIT_CODE_HASH = "0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54";
+    public const string POOL_INIT_CODE_HASH = MAINNET_POOL_INIT_CODE_HASH;
 
     public static string PoolInitCodeHash(ChainId? chainId = null)
     {
@@ -20,7 +24,7 @@ public static class Constants
             case ChainId.ZKSYNC:
                 return "0x010013f177ea1fcbc4520f9a3ca7cd2d1d77959e05aa66484027cb38e712aeed";
             default:
-                return POOL_INIT_CODE_HASH;
+                return MAINNET_POOL_INIT_CODE_HASH;
         }
     }
 

@@ -391,9 +391,9 @@ public class Trade<TInput, TOutput>
             {
                 (amountOut, _) = await pool.GetOutputAmount(amountIn);
             }
-            catch (Exception error)
+            catch (Exception)
             {
-                //if (error is InsufficientInputAmountError) continue;
+                // upstream swallows InsufficientInputAmountError and continues; that error type isn't ported, so rethrow.
                 throw;
             }
 
@@ -461,9 +461,9 @@ public class Trade<TInput, TOutput>
             {
                 (amountIn, _) = await pool.GetInputAmount(amountOut);
             }
-            catch (Exception error)
+            catch (Exception)
             {
-                //if (error is InsufficientReservesError) continue;
+                // upstream swallows InsufficientReservesError and continues; that error type isn't ported, so rethrow.
                 throw;
             }
 

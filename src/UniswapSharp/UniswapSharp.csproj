@@ -9,8 +9,8 @@
     <PackageId>UniswapSharp</PackageId>
     <Authors>Diffused Networks</Authors>
     <Company>Diffused Networks</Company>
-    <Description>A C#/.NET port of the official Uniswap SDKs (sdk-core and v3-sdk): tokens, pools, positions, routes, trades, tick/sqrt-price/swap math, and V3 periphery calldata — with exact BigInteger/BigRational arithmetic.</Description>
-    <PackageTags>uniswap;defi;ethereum;v3;amm;web3;nethereum;dex</PackageTags>
+    <Description>A C#/.NET port of the official Uniswap SDK monorepo (Uniswap/sdks): sdk-core, v2/v3/v4-sdk, router-sdk, universal-router-sdk, uniswapx-sdk, permit2-sdk and smart-wallet-sdk. Model tokens, pools, positions, routes and trades; run the tick/sqrt-price/swap/liquidity math; build V3/V4 periphery and Universal Router calldata; and hash/sign Permit2 and UniswapX orders — all with exact BigInteger/BigRational arithmetic (no floating point in protocol math).</Description>
+    <PackageTags>uniswap;defi;ethereum;v2;v3;v4;amm;web3;nethereum;dex;permit2;uniswapx;universal-router;smart-wallet</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/grinidx/UniswapSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/grinidx/UniswapSharp</RepositoryUrl>

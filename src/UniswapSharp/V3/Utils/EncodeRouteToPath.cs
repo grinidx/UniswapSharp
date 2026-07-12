@@ -9,8 +9,6 @@ public static class EncodeRouteToPath
 {
     /// <summary>
     /// Converts a route to a hex encoded path
-    /// <summary>
-    /// Converts a route to a hex encoded path
     /// </summary>
     /// <param name="route">The v3 path to convert to an encoded path</param>
     /// <param name="exactOutput">Whether the route should be encoded in reverse, for making exact output swaps</param>
