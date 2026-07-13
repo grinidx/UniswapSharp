@@ -6,9 +6,13 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-First release candidate — the full [`Uniswap/sdks`](https://github.com/Uniswap/sdks) monorepo surface
+## [1.0.0] - 2026-07-13
+
+First stable release — the full [`Uniswap/sdks`](https://github.com/Uniswap/sdks) monorepo surface
 is ported to C#/.NET 10, test-first and verified to the digit against the upstream `.test.ts` vectors
-(**1,694 xUnit tests, 0 failing**, on Linux / Windows / macOS).
+(**1,695 xUnit tests, 0 failing**, on Linux / Windows / macOS, with zero compiler warnings).
+
+Preceded by `1.0.0-rc.1` and `1.0.0-rc.2`, both published and smoke-tested from nuget.org.
 
 ### Added
 - **sdk-core** (`UniswapSharp.Core`) — currencies/tokens, `Fraction`/`Percent`/`Price`/`CurrencyAmount`
@@ -72,3 +76,6 @@ is ported to C#/.NET 10, test-first and verified to the digit against the upstre
   end-to-end validation against a live node/DNS is deferred. Upstream code-generated contract bindings
   (`contracts/**`) and Foundry Solidity suites are intentionally not ported. See
   [docs/PORTING.md](docs/PORTING.md) for the full list of skips and intentional divergences.
+
+[Unreleased]: https://github.com/grinidx/UniswapSharp/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/grinidx/UniswapSharp/releases/tag/v1.0.0
