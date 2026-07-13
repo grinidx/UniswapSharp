@@ -38,6 +38,12 @@ is ported to C#/.NET 10, test-first and verified to the digit against the upstre
   files, contributor & porting guides, and tag-driven NuGet packaging (SourceLink + symbols + MinVer).
 
 ### Changed
+- **Nullable-reference hardening of the public API (pre-1.0.0).** Option/params types now carry explicit null
+  contracts taken from the upstream TypeScript interfaces: upstream-required fields are `required` in C#,
+  upstream-optional fields (`x?: T`) are nullable. `CurrencyAmount.Wrapped()` and `.AsBaseCurrency()` are now
+  non-nullable (they provably never return null), strengthening the contract for callers. The solution builds
+  with **zero compiler warnings**. Consumers using object initializers may need to supply fields now marked
+  `required` — a deliberate source-level tightening done before the stable release.
 - Test assertions migrated from FluentAssertions to **AwesomeAssertions** (Apache-2.0 community fork)
   to avoid FluentAssertions v8's commercial license. Test-only; no effect on the shipped package.
 - Runtime dependencies updated to `Nethereum` 6.1.0 and `ExtendedNumerics.BigRational` 3000.0.2.132,
@@ -46,6 +52,15 @@ is ported to C#/.NET 10, test-first and verified to the digit against the upstre
   to provide Ed25519 for the tamperproof-transactions port.
 
 ### Fixed
+- **V3 `SwapRouter` input-token-permit path was unusable.** `SwapOptions.InputTokenPermit` was typed against an
+  empty stub class, so the only assignable value failed `SelfPermit.EncodePermit`'s type tests and always threw
+  `"Invalid permit options"` — while the valid permit types could not be assigned to it at all. The upstream
+  `PermitOptions` union is now modelled as `SelfPermit.IPermitOptions`, implemented by both
+  `StandardPermitArguments` and `AllowedPermitArguments`. Every permit option (`InputTokenPermit`,
+  `OutputTokenPermit`, `Token0Permit`, `Token1Permit`) is typed against it instead of `object`, so misuse is now
+  a compile error. Pinned by a new regression test; upstream ships no test for this path.
+- `PoolTests.BigNums_CorrectlyHandlesTwoBigIntegers` awaited its `GetInputAmount` call — previously the
+  unawaited `Task` swallowed exceptions, so the test could pass vacuously.
 - Several latent correctness bugs found while porting and pinned with upstream vectors: `sdk-core`
   `sqrt`, the FOT `Token` guard, zkSync address slicing, exact `Fraction` formatting (no float),
   `CurrencyAmount.ToExact()` overflow/format handling, `EncodeRouteToPath`, `Multicall` encoding,

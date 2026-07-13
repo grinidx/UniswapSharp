@@ -10,7 +10,8 @@ public class Route<TInput, TOutput> where TInput : BaseCurrency where TOutput : 
     public TInput Input { get; }
     public TOutput Output { get; }
 
-    private Price<TInput, TOutput> _midPrice = null;
+    // Lazily computed and cached on first access — genuinely null until then.
+    private Price<TInput, TOutput>? _midPrice;
 
     public Route(List<Pool> pools, TInput input, TOutput output)
     {

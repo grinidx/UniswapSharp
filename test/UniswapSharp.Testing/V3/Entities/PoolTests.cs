@@ -282,7 +282,9 @@ public class PoolTests
 
         var inputAmount = CurrencyAmount<Token>.FromRawAmount(USDC, 100);
         var outputAmount = (await pool.GetOutputAmount(inputAmount)).outputAmount;
-        pool.GetInputAmount(outputAmount);
+        // Upstream calls this without awaiting; in C# an unawaited Task swallows exceptions, which
+        // would let this test pass even if GetInputAmount threw on the big numbers it is named for.
+        await pool.GetInputAmount(outputAmount);
         Assert.True(outputAmount.Currency.Equals(DAI));
     }
 }

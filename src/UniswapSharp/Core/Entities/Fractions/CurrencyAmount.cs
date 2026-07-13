@@ -97,26 +97,21 @@ public class CurrencyAmount<T> : Fraction, IEquatable<CurrencyAmount<T>> where T
         return integerPart.ToString(CultureInfo.InvariantCulture) + "." + fractional;
     }
 
-    public CurrencyAmount<BaseCurrency>? AsBaseCurrency() => new(this.Currency, Numerator, Denominator)
+    public CurrencyAmount<BaseCurrency> AsBaseCurrency() => new(this.Currency, Numerator, Denominator);
+
+    /// <summary>
+    /// The amount re-expressed against the currency's wrapped <see cref="Token"/>.
+    /// Never null: every path either reuses this instance or constructs a new amount.
+    /// </summary>
+    public CurrencyAmount<Token> Wrapped()
     {
-
-    };
-
-
-    public CurrencyAmount<Token>? Wrapped()
-    {
-
         if (Currency is Token)
         {
             var x = this as CurrencyAmount<Token>;
-
             return x ?? FromFractionalAmount(Currency.Wrapped(), Numerator, Denominator);
         }
 
-
         return FromFractionalAmount(Currency.Wrapped(), Numerator, Denominator);
-
-
     }
 
     public bool Equals(CurrencyAmount<T>? other)

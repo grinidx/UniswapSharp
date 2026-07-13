@@ -29,13 +29,15 @@ public class SwapOptions
     /// <summary>Either a deadline (epoch seconds, as BigInteger/int/string) or a previous block hash (0x… string).</summary>
     public object? DeadlineOrPreviousBlockhash { get; init; }
 
-    public object? InputTokenPermit { get; init; }
+    /// <summary>Accepts SelfPermit.StandardPermitArguments or SelfPermit.AllowedPermitArguments.</summary>
+    public V3.SelfPermit.IPermitOptions? InputTokenPermit { get; init; }
     public V3.Payments.IFeeOptions? Fee { get; init; }
 }
 
 public class SwapAndAddOptions : SwapOptions
 {
-    public object? OutputTokenPermit { get; init; }
+    /// <summary>Accepts SelfPermit.StandardPermitArguments or SelfPermit.AllowedPermitArguments.</summary>
+    public V3.SelfPermit.IPermitOptions? OutputTokenPermit { get; init; }
 }
 
 /// <summary>
