@@ -18,8 +18,9 @@ public class ConstantsTests
         var computedInitCodeHash = Sha3Keccack.Current.CalculateHash(bytecodeBytes);
         var computedInitCodeHashHex = "0x" + BitConverter.ToString(computedInitCodeHash).Replace("-", "").ToLowerInvariant();
 
-        // Assert that the computed hash matches the constant
-        Assert.Equal(Constants.POOL_INIT_CODE_HASH, computedInitCodeHashHex);
+        // Assert that the computed hash matches the supported API (which shares the same
+        // source-of-truth constant as the obsolete POOL_INIT_CODE_HASH).
+        Assert.Equal(Constants.PoolInitCodeHash(), computedInitCodeHashHex);
     }
 
 

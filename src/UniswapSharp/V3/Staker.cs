@@ -131,19 +131,20 @@ public abstract class Staker
     public class FullWithdrawOptions : IClaimOptions, IWithdrawOptions
     {
         public BigInteger TokenId { get; set; }
-        public string Recipient { get; set; }
+        public required string Recipient { get; set; }
         public BigInteger? Amount { get; set; }
-        public string Owner { get; set; }
-        public string Data { get; set; }
+        public required string Owner { get; set; }
+        // upstream `data?: string` — optional.
+        public string? Data { get; set; }
     }
 
     public class IncentiveKey
     {
-        public Token RewardToken { get; set; }
-        public Pool Pool { get; set; }
+        public required Token RewardToken { get; set; }
+        public required Pool Pool { get; set; }
         public BigInteger StartTime { get; set; }
         public BigInteger EndTime { get; set; }
-        public string Refundee { get; set; }
+        public required string Refundee { get; set; }
     }
 
     public interface IClaimOptions
@@ -156,28 +157,25 @@ public abstract class Staker
     public class ClaimOptions : IClaimOptions
     {
         public BigInteger TokenId { get; set; }
-        public string Recipient { get; set; }
+        public required string Recipient { get; set; }
         public BigInteger? Amount { get; set; }
     }
 
     public interface IWithdrawOptions
     {
         public string Owner { get; set; }
-        public string Data { get; set; }
-    }
-
-    public class PermitOptions
-    {
-        // Implement PermitOptions
+        public string? Data { get; set; }
     }
 
     public class SwapOptions
     {
-        public Percent SlippageTolerance { get; set; }
-        public string Recipient { get; set; }
+        public required Percent SlippageTolerance { get; set; }
+        public required string Recipient { get; set; }
         public BigInteger Deadline { get; set; }
-        public PermitOptions InputTokenPermit { get; set; }
+        // upstream `inputTokenPermit?: PermitOptions` / `fee?: FeeOptions` — optional.
+        // Accepts SelfPermit.StandardPermitArguments or SelfPermit.AllowedPermitArguments.
+        public SelfPermit.IPermitOptions? InputTokenPermit { get; set; }
         public BigInteger? SqrtPriceLimitX96 { get; set; }
-        public Payments.FeeOptions Fee { get; set; }
+        public Payments.FeeOptions? Fee { get; set; }
     }
 }

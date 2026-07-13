@@ -79,6 +79,31 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
 3. Implement until green, matching numbers to the digit. 4. Update the table above. 5. PR into `main`.
 
 ## 6. Intentional divergences
+- **Nullable-reference hardening (pre-1.0.0).** The public option/params types now carry explicit null
+  contracts derived from the upstream TypeScript interfaces: a required upstream field (`x: T`) is `required`
+  in C#, an optional one (`x?: T`) is nullable (`T?`). Applied across `NonfungiblePositionManager`,
+  `Staker`, `SelfPermit` and `Payments`. The library and test suite now build with **zero compiler warnings**.
+  Two root causes were fixed rather than suppressed:
+  - `CurrencyAmount.Wrapped()` / `.AsBaseCurrency()` were declared nullable but provably never return null
+    (every path constructs a value via the non-nullable `FromFractionalAmount`, and `BaseCurrency.Wrapped()`
+    returns a non-nullable `Token`). Tightening the return types to non-nullable removed all five downstream
+    flow warnings (`CS8601`/`CS8602`) at once and strengthens the contract for callers.
+  - `Route._midPrice` is a lazily-computed cache and is genuinely null until first access; it is now `Price<,>?`.
+- **`PermitOptions` union modelled with a marker interface — fixes a broken API path.** Upstream declares
+  `PermitOptions = StandardPermitArguments | AllowedPermitArguments`. The port had typed
+  `Staker.SwapOptions.InputTokenPermit` as an **empty stub class** (`Staker.PermitOptions {}`) while
+  `SelfPermit.EncodePermit` took `object` and type-tested for the two argument interfaces. The result: the only
+  value assignable to `InputTokenPermit` satisfied neither test, so the V3 SwapRouter's input-token-permit path
+  **could only ever throw `"Invalid permit options"`** — and the valid argument types could not be assigned to it
+  at all. Upstream ships no test for this path, which is why the port inherited the gap. Fixed by introducing
+  `SelfPermit.IPermitOptions` (implemented by both argument interfaces), typing `EncodePermit` and every permit
+  option against it (`Staker.SwapOptions.InputTokenPermit`, `NonfungiblePositionManager.AddLiquidityOptions.
+  Token0Permit`/`Token1Permit`, `Router.SwapOptions.InputTokenPermit`/`SwapAndAddOptions.OutputTokenPermit` —
+  all previously `object?`), and deleting the empty stub. Pinned by `V3/SwapRouterPermitTests.cs`.
+- **`PoolTests.BigNums_CorrectlyHandlesTwoBigIntegers` now awaits `GetInputAmount`.** Upstream calls
+  `pool.getInputAmount(outputAmount)` without awaiting ("if output is correct, function has succeeded"). In C#
+  an unawaited `Task` swallows exceptions, so the test would have passed even if `GetInputAmount` threw on the
+  very big numbers it is named for. Awaiting it makes the assertion real; it passes.
 - `CurrencyAmount.ToExact` now computes the exact decimal with `BigInteger` (integer part + zero-padded,
   trailing-trimmed fractional part), matching Decimal.js. The earlier `(decimal)` cast overflowed
   `System.Decimal` (~7.9e28) for large amounts; hardened test-first (`CurrencyAmountTests.cs`, incl. a

@@ -8,7 +8,12 @@ namespace UniswapSharp.V3;
 
 public static class SelfPermit
 {
-    public static string EncodePermit(Token token, object options)
+    /// <summary>
+    /// Marker for the upstream union <c>PermitOptions = StandardPermitArguments | AllowedPermitArguments</c>.
+    /// </summary>
+    public interface IPermitOptions;
+
+    public static string EncodePermit(Token token, IPermitOptions options)
     {
         if (options is IAllowedPermitArguments allowedOptions)
         {
@@ -36,7 +41,7 @@ public static class SelfPermit
         }
     }
 
-    public interface IAllowedPermitArguments
+    public interface IAllowedPermitArguments : IPermitOptions
     {
         byte V { get; }
         string R { get; }
@@ -45,7 +50,7 @@ public static class SelfPermit
         BigInteger Expiry { get; }
     }
 
-    public interface IStandardPermitArguments
+    public interface IStandardPermitArguments : IPermitOptions
     {
         byte V { get; }
         string R { get; }
@@ -57,8 +62,8 @@ public static class SelfPermit
     public class AllowedPermitArguments : IAllowedPermitArguments
     {
         public byte V { get; set; }
-        public string R { get; set; }
-        public string S { get; set; }
+        public required string R { get; set; }
+        public required string S { get; set; }
         public BigInteger Nonce { get; set; }
         public BigInteger Expiry { get; set; }
     }
@@ -66,8 +71,8 @@ public static class SelfPermit
     public class StandardPermitArguments : IStandardPermitArguments
     {
         public byte V { get; set; }
-        public string R { get; set; }
-        public string S { get; set; }
+        public required string R { get; set; }
+        public required string S { get; set; }
         public BigInteger Amount { get; set; }
         public BigInteger Deadline { get; set; }
     }

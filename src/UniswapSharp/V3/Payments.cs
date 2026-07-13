@@ -75,7 +75,7 @@ public abstract class Payments
 
     public class FeeOptions : IFeeOptions
     {
-        public Percent Fee { get; set; }
-        public string Recipient { get; set; }
+        public required Percent Fee { get; set; }
+        public required string Recipient { get; set; }
     }
 }

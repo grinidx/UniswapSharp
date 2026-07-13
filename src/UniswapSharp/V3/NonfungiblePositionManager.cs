@@ -14,28 +14,29 @@ public class NonfungiblePositionManager
 {
     public class MethodParameters
     {
-        public string Calldata { get; set; }
-        public string Value { get; set; }
+        public required string Calldata { get; set; }
+        public required string Value { get; set; }
     }
 
     // Common options for adding liquidity (mint or increase).
     public abstract class AddLiquidityOptions
     {
-        public Percent SlippageTolerance { get; set; }
+        public required Percent SlippageTolerance { get; set; }
         public BigInteger Deadline { get; set; }
 
         // Whether to spend ether. If set, one of the pool tokens must be WETH.
         public NativeCurrency? UseNative { get; set; }
 
-        // Optional permit parameters for spending token0 / token1 (SelfPermit options).
-        public object? Token0Permit { get; set; }
-        public object? Token1Permit { get; set; }
+        // Optional permit parameters for spending token0 / token1.
+        // Accepts SelfPermit.StandardPermitArguments or SelfPermit.AllowedPermitArguments.
+        public SelfPermit.IPermitOptions? Token0Permit { get; set; }
+        public SelfPermit.IPermitOptions? Token1Permit { get; set; }
     }
 
     public class MintOptions : AddLiquidityOptions
     {
         // The account that should receive the minted NFT.
-        public string Recipient { get; set; }
+        public required string Recipient { get; set; }
 
         // Creates the pool if not initialized before mint.
         public bool CreatePool { get; set; }
@@ -162,29 +163,29 @@ public class NonfungiblePositionManager
     public class CollectOptions
     {
         public BigInteger TokenId { get; set; }
-        public CurrencyAmount<BaseCurrency> ExpectedCurrencyOwed0 { get; set; }
-        public CurrencyAmount<BaseCurrency> ExpectedCurrencyOwed1 { get; set; }
-        public string Recipient { get; set; }
+        public required CurrencyAmount<BaseCurrency> ExpectedCurrencyOwed0 { get; set; }
+        public required CurrencyAmount<BaseCurrency> ExpectedCurrencyOwed1 { get; set; }
+        public required string Recipient { get; set; }
     }
 
     public class NFTPermitOptions
     {
         public byte V { get; set; }
-        public string R { get; set; }
-        public string S { get; set; }
+        public required string R { get; set; }
+        public required string S { get; set; }
         public BigInteger Deadline { get; set; }
-        public string Spender { get; set; }
+        public required string Spender { get; set; }
     }
 
     public class RemoveLiquidityOptions
     {
         public BigInteger TokenId { get; set; }
-        public Percent LiquidityPercentage { get; set; }
-        public Percent SlippageTolerance { get; set; }
+        public required Percent LiquidityPercentage { get; set; }
+        public required Percent SlippageTolerance { get; set; }
         public BigInteger Deadline { get; set; }
         public bool BurnToken { get; set; }
         public NFTPermitOptions? Permit { get; set; }
-        public CollectOptions CollectOptions { get; set; }
+        public required CollectOptions CollectOptions { get; set; }
     }
 
     private static List<string> EncodeCollect(CollectOptions options)
@@ -305,9 +306,10 @@ public class NonfungiblePositionManager
 
     public class SafeTransferOptions
     {
-        public string Sender { get; set; }
-        public string Recipient { get; set; }
+        public required string Sender { get; set; }
+        public required string Recipient { get; set; }
         public BigInteger TokenId { get; set; }
+        // upstream `data?: string` — optional.
         public string? Data { get; set; }
     }
 
@@ -342,21 +344,21 @@ public class NonfungiblePositionManager
 
     public class TypedDataField
     {
-        public string Name { get; set; }
-        public string Type { get; set; }
+        public required string Name { get; set; }
+        public required string Type { get; set; }
     }
 
     public class TypedDataDomain
     {
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public int ChainId { get; set; }
-        public string Version { get; set; }
-        public string VerifyingContract { get; set; }
+        public required string Version { get; set; }
+        public required string VerifyingContract { get; set; }
     }
 
     public class NFTPermitValues
     {
-        public string Spender { get; set; }
+        public required string Spender { get; set; }
         public BigInteger TokenId { get; set; }
         public BigInteger Deadline { get; set; }
         public BigInteger Nonce { get; set; }
@@ -364,9 +366,9 @@ public class NonfungiblePositionManager
 
     public class NFTPermitData
     {
-        public TypedDataDomain Domain { get; set; }
-        public Dictionary<string, List<TypedDataField>> Types { get; set; }
-        public NFTPermitValues Values { get; set; }
+        public required TypedDataDomain Domain { get; set; }
+        public required Dictionary<string, List<TypedDataField>> Types { get; set; }
+        public required NFTPermitValues Values { get; set; }
     }
 
     private static Dictionary<string, List<TypedDataField>> NftPermitTypes() => new()
