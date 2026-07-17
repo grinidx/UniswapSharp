@@ -49,7 +49,7 @@
     <!-- Override the vulnerable Newtonsoft.Json 11.0.2 that Nethereum.Hex still
          pins transitively (NU1903 / GHSA-5crp-9r3c-p9vr, fixed in 13.0.1+). -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="MinVer" Version="6.0.0">
+    <PackageReference Include="MinVer" Version="7.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
