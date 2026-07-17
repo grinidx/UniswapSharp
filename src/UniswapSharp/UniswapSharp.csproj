@@ -40,7 +40,7 @@
     <!-- Ed25519 (EdDSA) signing/verification for the tamperproof-transactions port: .NET's
          System.Security.Cryptography has no managed Ed25519 in net10.0, so we use the pure-managed
          BouncyCastle (already present transitively via Nethereum). RSA/ECDSA stay on SSC. -->
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageReference Include="ExtendedNumerics.BigRational" Version="3000.0.2.132" />
     <PackageReference Include="Nethereum.ABI" Version="6.1.0" />
     <PackageReference Include="Nethereum.Contracts" Version="6.1.0" />
