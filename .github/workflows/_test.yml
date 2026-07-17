@@ -46,7 +46,7 @@ jobs:
       # --- Reporting (single OS leg to avoid duplicate comments) ---
       - name: Publish test results
         if: always() && runner.os == 'Linux'
-        uses: EnricoMi/publish-unit-test-result-action@82082dac68ad6a19d980f8ce817e108b9f496c2a # v2.17.1
+        uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
         with:
           check_name: "Test Results"
           files: "${{ github.workspace }}/TestResults/**/*.trx"
