@@ -12,7 +12,7 @@ public class ChainsTests
         Assert.Equal(0.25, Constants.GetAverageBlockTimeSecs(ChainId.ARBITRUM_ONE));
         Assert.Equal(0.1, Constants.GetAverageBlockTimeSecs(ChainId.ROBINHOOD));
         Assert.Equal(1, Constants.GetAverageBlockTimeSecs(ChainId.MEGAETH));
-        Assert.Equal(0.48, Constants.GetAverageBlockTimeSecs(ChainId.ARC));
+        Assert.Equal(0.5, Constants.GetAverageBlockTimeSecs(ChainId.ARC));
         Assert.Equal(1, Constants.GetAverageBlockTimeSecs(ChainId.INK));
     }
 
@@ -30,7 +30,7 @@ public class ChainsTests
         Assert.Equal(32, Constants.SecondsToBlocks(8, ChainId.ARBITRUM_ONE)); // ceil(8/0.25)
         Assert.Equal(16, Constants.SecondsToBlocks(8, ChainId.TEMPO));        // ceil(8/0.5)
         Assert.Equal(8, Constants.SecondsToBlocks(8, ChainId.MEGAETH));       // ceil(8/1)
-        Assert.Equal(17, Constants.SecondsToBlocks(8, ChainId.ARC));          // ceil(8/0.48)
+        Assert.Equal(16, Constants.SecondsToBlocks(8, ChainId.ARC));          // ceil(8/0.5)
         Assert.Equal(80, Constants.SecondsToBlocks(8, ChainId.ROBINHOOD));    // ceil(8/0.1)
         Assert.Equal(8, Constants.SecondsToBlocks(8, ChainId.INK));           // ceil(8/1)
         Assert.Equal(1, Constants.SecondsToBlocks(1, ChainId.MAINNET));       // ceil(1/12)

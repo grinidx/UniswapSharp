@@ -108,4 +108,27 @@ public class AddressesTests
         string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.INK);
         Assert.Equal("0x177778f19e89dd1012bdbe603f144088a95c4b53", address);
     }
+
+    [Fact]
+    public void TickLensAddresses_ShouldReturnCorrectAddress_ForSepolia()
+    {
+        // Upstream #654: this entry previously held the multicall address, not TickLens.
+        Assert.Equal("0x0b343475d44EC2b4b8243EBF81dc888BF0A14b36", Addresses.TICK_LENS_ADDRESSES[ChainId.SEPOLIA]);
+    }
+
+    [Fact]
+    public void PermissionedV4Addresses_ShouldReturnCorrectAddresses_ForMainnet()
+    {
+        ChainAddresses mainnet = Addresses.CHAIN_TO_ADDRESSES_MAP[ChainId.MAINNET];
+        Assert.Equal("0x63Bd7e5D4EcfAA74d82AE1dE98F476C935a81973", mainnet.PermissionedV4PositionManagerAddress);
+        Assert.Equal("0x499a724Ab630549f14C995EC41a8E04fA3fd28c0", mainnet.PermissionedV4HooksAddress);
+    }
+
+    [Fact]
+    public void PermissionedV4Addresses_ShouldReturnCorrectAddresses_ForSepolia()
+    {
+        ChainAddresses sepolia = Addresses.CHAIN_TO_ADDRESSES_MAP[ChainId.SEPOLIA];
+        Assert.Equal("0xf99D553912084c99F6299291b75Fe9B7119Aa1A7", sepolia.PermissionedV4PositionManagerAddress);
+        Assert.Equal("0x51247E2291d290d17C08813A175AC86465EdE8c0", sepolia.PermissionedV4HooksAddress);
+    }
 }

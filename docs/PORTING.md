@@ -143,6 +143,16 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
 Record the new upstream commit, `git -C /home/devops/uniswap-sdks-official log --oneline <old>..<new> -- sdks/v3-sdk sdks/sdk-core`,
 port the deltas test-first, and bump the pinned commit above.
 
+### In-flight: parity sweep `6081b3e` → `35c4e35`
+Five dependency-ordered PRs, per [`docs/design/2026-09-02-upstream-parity-design.md`](design/2026-09-02-upstream-parity-design.md).
+The pinned commit in §1 stays at `6081b3e` until the last one lands.
+
+- [x] PR 1 — `Core` address + chain registry (sepolia TickLens, permissioned V4 + hooks, Arc block time)
+- [ ] PR 2 — small independent fixes (`Router` midPrice, `UniswapX` batch ordering, `SmartWallet` Monad, UR sepolia address)
+- [ ] PR 3 — `UniversalRouter` encoding (V4 exact-out TAKE floor, ACROSS tuple, direct transfers)
+- [ ] PR 4 — `LiquidityLauncher` registry + config (incl. the breaking `BuildPositionDefinitions` signature)
+- [ ] PR 5 — `LiquidityLauncher` launch surface; bump the §1 pin to `35c4e35`
+
 ## 8. v4-sdk port (complete)
 Reuses V3 concentrated-liquidity math; additive under `src/UniswapSharp/V4/` (tests under `test/UniswapSharp.Testing/V4/`).
 Dependency-ordered, test-first phases:
