@@ -10,7 +10,7 @@ the V3 periphery contracts.
 
 - Target framework: **.NET 10** (`net10.0`)
 - V3 core (entities + math) is implemented and unit-tested
-- 1695 xUnit v3 tests; all passing (see Outstanding work)
+- 1900 xUnit v3 tests; all passing (see Outstanding work)
 - All calldata / action-builder stubs are now implemented and test-covered (no `NotImplementedException` left)
 - Not yet packaged or published to NuGet
 
@@ -139,6 +139,15 @@ place. Remaining work is **Phase B** (V3 feature-parity port) and beyond.
    (`global.json`, MTP reporting flags in `_test.yml`, `coverlet.collector` replaced by
    `Microsoft.Testing.Extensions.CodeCoverage` + `.TrxReport`). Dependabot was switched to
    security-updates-only at the same time.
+2. **Upstream parity sweep `6081b3e` → `35c4e35`** - DONE (2026-09-02). Five dependency-ordered PRs
+   (#100, #101, #102, #103, #104 + the launch-surface PR), each test-first and green, per
+   [docs/design/2026-09-02-upstream-parity-design.md](docs/design/2026-09-02-upstream-parity-design.md).
+   Cleared four real bugs the port had inherited — `MixedRouteSDK.MidPrice` inverted across
+   native/wrapped boundaries, the `ACROSS_V4_DEPOSIT_V3` flat encoding that made every bridge deposit
+   undecodable on-chain, unfloored V4 exact-out legs, and sepolia's `TickLensAddress` pointing at
+   multicall — and added the direct-transfer, quick-launch and instant-launch surfaces. Carries one
+   breaking change (`BuildPositionDefinitions`, upstream #651), so the next release is **2.0.0**.
+
 2. **Seven `NotImplementedException` stubs** - DONE. All ported test-first (upstream `.test.ts`
    cases, calldata matched to the digit): `PositionLibrary.SubIn256` (#32), `PriceTick` (#34),
    `Payments` (#35), `SwapQuoter` (#36), and `NonfungiblePositionManager` (create/add #39,

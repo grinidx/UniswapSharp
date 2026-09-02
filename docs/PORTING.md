@@ -2,7 +2,7 @@
 
 ## 1. Upstream source of truth
 - Repo: https://github.com/Uniswap/sdks — packages `sdk-core`, `v3-sdk` (and `v4-sdk`, later phase).
-- Pinned commit: `6081b3e7169a761188cd5e77675be9e5da5d331e` (2026-07-09).
+- Pinned commit: `35c4e35aca9e22169ce17d7106e7fc5f27ccd03d` (2026-09-01).
 - Local clone (this workspace): `/home/devops/uniswap-sdks-official/sdks/`.
 - Every upstream module has a `.test.ts` beside it — those are the acceptance tests we port.
 
@@ -143,18 +143,6 @@ None — all seven original `NotImplementedException` stubs are ported test-firs
 Record the new upstream commit, `git -C /home/devops/uniswap-sdks-official log --oneline <old>..<new> -- sdks/v3-sdk sdks/sdk-core`,
 port the deltas test-first, and bump the pinned commit above.
 
-### In-flight: parity sweep `6081b3e` → `35c4e35`
-Five dependency-ordered PRs, per [`docs/design/2026-09-02-upstream-parity-design.md`](design/2026-09-02-upstream-parity-design.md).
-The pinned commit in §1 stays at `6081b3e` until the last one lands.
-
-- [x] PR 1 — `Core` address + chain registry (sepolia TickLens, permissioned V4 + hooks, Arc block time)
-- [x] PR 2 — small independent fixes (`Router` midPrice + partition, `UniswapX` Ink, `SmartWallet` Monad, UR sepolia address). UniswapX #685/#686 excluded: `multicall.ts`/`OrderQuoter.ts` were never ported, so they are new surface rather than a re-sync — see §14.
-- [x] PR 3 — `UniversalRouter` encoding fixes (V4 exact-out TAKE floor, ACROSS single-tuple input)
-- [x] PR 3b — `UniversalRouter` direct transfers (#638): new `DirectTransfers` surface on the encodeSwaps path
-- [x] PR 4 — `LiquidityLauncher` registry + config (incl. the breaking `BuildPositionDefinitions` signature).
-      The Instant Launch registries in `addresses.ts`/`abis.ts` move to PR 5 with the surface that uses them.
-- [ ] PR 5 — `LiquidityLauncher` launch surface; bump the §1 pin to `35c4e35`
-
 ## 8. v4-sdk port (complete)
 Reuses V3 concentrated-liquidity math; additive under `src/UniswapSharp/V4/` (tests under `test/UniswapSharp.Testing/V4/`).
 Dependency-ordered, test-first phases:
@@ -259,9 +247,12 @@ calldata are matched to the upstream golden vectors byte-for-byte.
 | `config/blocks.ts` | `Config/Blocks.cs` | Yes — `Config/BlocksTests.cs` (4) | ported |
 | `config/emission.ts` | `Config/Emission.cs` | Yes — `Config/EmissionTests.cs` (4) | ported |
 | `config/price.ts` | `Config/Price.cs` | Yes — `Config/PriceTests.cs` (5) | ported |
-| `config/fees.ts` | `Config/Fees.cs` (`FeeToTickSpacing`, `ResolvePoolFee`) | via callers | ported |
+| `config/fees.ts` | `Config/Fees.cs` (`ResolveNewPoolTickSpacing` + `[Obsolete]` `FeeToTickSpacing`, `ResolvePoolFee`) | Yes — `Config/FeesTests.cs` (6) | ported |
 | `config/lpAllocation.ts` | `Config/LpAllocation.cs` | via callers | ported |
-| `config/positions.ts` | `Config/Positions.cs` | via callers | ported |
+| `config/positions.ts` | `Config/Positions.cs` | Yes — `Config/PositionsTests.cs` (7, incl. v4 currency ordering) | ported |
+| `quickLaunch.ts` | `QuickLaunch.cs` | Yes — `QuickLaunchTests.cs` (35) | ported |
+| `instantLaunch.ts` | `InstantLaunch.cs` | Yes — `InstantLaunchTests.cs` (23, incl. 2 on-chain pool-id golden vectors) | ported (see divergences) |
+| `instantLaunchFees.ts` | `InstantLaunchFees.cs` | Yes — `InstantLaunchFeesTests.cs` (11) | ported |
 | `abis.ts` | *(not ported as a surface)* | n/a | skipped |
 | `reads.ts` | *(not ported)* | n/a | skipped |
 | `availability.ts` | *(not ported)* | n/a | skipped |
@@ -269,6 +260,11 @@ calldata are matched to the upstream golden vectors byte-for-byte.
 ### Skipped modules (liquidity-launcher-sdk)
 - **`reads.ts`** — on-chain read descriptors + viem `PublicClient` helpers; no `.test.ts`, requires a
   live provider. Intentionally deferred for live verification later.
+- **`instantLaunch.ts`'s quoting helpers** — `predictInstantLaunchTokenAddressCall`,
+  `quoteInstantLaunchBuyCall` and `quoteInstantLaunchBuy` are `reads.ts` `ContractCall` descriptors and a
+  viem `PublicClient` executor, so they inherit the `reads.ts` skip above. Everything deterministic in
+  the module **is** ported: the deployment-registry resolution, the preset constants, the pool
+  key/id derivation (verified against two on-chain golden vectors) and the transaction assembler.
 - **`availability.ts`** — fee-tier availability check that composes `reads.ts` against a live client;
   no `.test.ts`, depends on `reads.ts`. Deferred with it. Its pure inputs (`PoolId.ComputeLbpPoolId`,
   `Addresses.GetLauncherAddresses`) are ported.
