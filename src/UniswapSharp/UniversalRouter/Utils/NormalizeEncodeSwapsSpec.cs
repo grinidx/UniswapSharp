@@ -6,7 +6,7 @@ namespace UniswapSharp.UniversalRouter.Utils;
 /// <summary>Port of universal-router-sdk <c>utils/normalizeEncodeSwapsSpec.ts</c>.</summary>
 public static class NormalizeEncodeSwapsSpec
 {
-    /// <summary>Fills the four optional fields that validate/compute require.</summary>
+    /// <summary>Fills the five optional fields that validate/compute require.</summary>
     public static NormalizedSwapSpecification Normalize(SwapSpecification spec) => new()
     {
         TradeType = spec.TradeType,
@@ -16,6 +16,7 @@ public static class NormalizeEncodeSwapsSpec
         TokenTransferMode = spec.TokenTransferMode ?? Entities.Actions.TokenTransferMode.Permit2,
         UrVersion = spec.UrVersion ?? UniversalRouterVersion.V2_0,
         SafeMode = spec.SafeMode ?? false,
+        AllowDirectTransfers = spec.AllowDirectTransfers ?? false,
         Fee = spec.Fee,
         Permit = spec.Permit,
         ChainId = spec.ChainId,

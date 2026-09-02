@@ -13,6 +13,27 @@ public abstract partial class SwapRouter
     /// <summary>
     /// Encodes router-provided swap steps inside the SDK safety envelope. Port of <c>SwapRouter.encodeSwaps</c>.
     /// </summary>
+    /// <remarks>
+    /// <para>Two validation regimes:</para>
+    /// <list type="bullet">
+    /// <item>Default (router custody): the single SDK ingress pull is the only user withdrawal and every
+    /// step recipient must be the router; the final SWEEP floor enforces the minimum output.</item>
+    /// <item><see cref="SwapSpecification.AllowDirectTransfers"/>: steps may pull input straight from the
+    /// user (<c>PayerIsUser</c>, v4 SETTLE_ALL) and pay output straight to the recipient (step recipients,
+    /// v4 TAKE/TAKE_ALL, UNWRAP_WETH). Direct pulls may total at most <c>exactOrMaxAmountIn</c> — ingress
+    /// pulls the remainder — and direct output minimums count toward the SWEEP floor. Portion fees still
+    /// require output custody. Step amounts are never trusted, only counted or capped.</item>
+    /// </list>
+    /// <para>Direct-transfer caveats:</para>
+    /// <list type="bullet">
+    /// <item>Fee-on-transfer output: output minimums bind the amount each swap <em>produces</em>
+    /// (pre-transfer), not the recipient's post-tax balance. A FoT token's own transfer tax reduces the
+    /// final balance below the minimum — inherent to such tokens and expected when swapping into one,
+    /// not a shortfall to guard.</item>
+    /// <item>A flat fee is a plain TRANSFER, so routing must keep at least the fee amount in router
+    /// custody (not route 100% of output directly), or the fee TRANSFER reverts.</item>
+    /// </list>
+    /// </remarks>
     public static MethodParameters EncodeSwaps(SwapSpecification spec, IReadOnlyList<SwapStep> swapSteps)
     {
         var normalizedSpec = NormalizeEncodeSwapsSpec.Normalize(spec);
@@ -34,11 +55,16 @@ public abstract partial class SwapRouter
 
             if (!inputToken.IsNative && normalizedSpec.NativeErc20Input != true)
             {
-                planner.AddCommand(
-                    CommandType.PERMIT2_TRANSFER_FROM,
-                    new object?[] { CurrencyAddress.GetCurrencyAddress(inputToken), Constants.ROUTER_AS_RECIPIENT, exactOrMaxAmountIn },
-                    false,
-                    normalizedSpec.UrVersion);
+                // user-paid steps draw part of the budget straight from the wallet; ingress pulls only the rest
+                BigInteger ingressAmount = exactOrMaxAmountIn - DirectTransfers.SumUserPaidMax(swapSteps);
+                if (ingressAmount > 0)
+                {
+                    planner.AddCommand(
+                        CommandType.PERMIT2_TRANSFER_FROM,
+                        new object?[] { CurrencyAddress.GetCurrencyAddress(inputToken), Constants.ROUTER_AS_RECIPIENT, ingressAmount },
+                        false,
+                        normalizedSpec.UrVersion);
+                }
             }
         }
 
@@ -69,8 +95,15 @@ public abstract partial class SwapRouter
         }
 
         // Assumes routers already normalized final gross output into routing.outputToken.
+        // Direct-output minimums (contract-enforced, delivered straight to the recipient) reduce the
+        // floor; the sweep always remains to forward any custody balance.
+        BigInteger sweepFloor = normalizedSpec.AllowDirectTransfers
+            ? DirectTransfers.DirectTransferSweepFloor(
+                normalizedSpec, netMinOrExactAmountOut, swapSteps, CurrencyAddress.GetCurrencyAddress(outputToken))
+            : netMinOrExactAmountOut;
+
         planner.AddCommand(CommandType.SWEEP,
-            new object?[] { CurrencyAddress.GetCurrencyAddress(outputToken), normalizedSpec.Recipient, netMinOrExactAmountOut },
+            new object?[] { CurrencyAddress.GetCurrencyAddress(outputToken), normalizedSpec.Recipient, sweepFloor },
             false, normalizedSpec.UrVersion);
 
         // Exact-output uses max input, so refund unused slippage padding to the recipient.

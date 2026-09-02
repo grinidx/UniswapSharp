@@ -42,9 +42,16 @@ public class SwapSpecification
     public UniversalRouterVersion? UrVersion { get; init; }
     public bool? SafeMode { get; init; }
     public bool? NativeErc20Input { get; init; }
+
+    /// <summary>
+    /// Lets steps pull input straight from the user and pay output straight to <see cref="Recipient"/>
+    /// (instead of router custody), still validated so the user never pays more than
+    /// <c>exactOrMaxAmountIn</c> or receives less than the minimum output. Default false.
+    /// </summary>
+    public bool? AllowDirectTransfers { get; init; }
 }
 
-/// <summary>Port of <c>NormalizedSwapSpecification</c> (the four optional fields are resolved to non-null).</summary>
+/// <summary>Port of <c>NormalizedSwapSpecification</c> (the five optional fields are resolved to non-null).</summary>
 public sealed class NormalizedSwapSpecification
 {
     public required TradeType TradeType { get; init; }
@@ -54,6 +61,7 @@ public sealed class NormalizedSwapSpecification
     public required TokenTransferMode TokenTransferMode { get; init; }
     public required UniversalRouterVersion UrVersion { get; init; }
     public required bool SafeMode { get; init; }
+    public required bool AllowDirectTransfers { get; init; }
     public Fee? Fee { get; init; }
     public Permit2Permit? Permit { get; init; }
     public int? ChainId { get; init; }
@@ -68,19 +76,19 @@ public abstract record SwapStep;
 
 public sealed record V2SwapExactIn(
     string Recipient, object AmountIn, object AmountOutMin, IReadOnlyList<string> Path,
-    IReadOnlyList<object>? MinHopPriceX36 = null) : SwapStep;
+    IReadOnlyList<object>? MinHopPriceX36 = null, bool? PayerIsUser = null) : SwapStep;
 
 public sealed record V2SwapExactOut(
     string Recipient, object AmountOut, object AmountInMax, IReadOnlyList<string> Path,
-    IReadOnlyList<object>? MinHopPriceX36 = null) : SwapStep;
+    IReadOnlyList<object>? MinHopPriceX36 = null, bool? PayerIsUser = null) : SwapStep;
 
 public sealed record V3SwapExactIn(
     string Recipient, object AmountIn, object AmountOutMin, string Path,
-    IReadOnlyList<object>? MinHopPriceX36 = null) : SwapStep;
+    IReadOnlyList<object>? MinHopPriceX36 = null, bool? PayerIsUser = null) : SwapStep;
 
 public sealed record V3SwapExactOut(
     string Recipient, object AmountOut, object AmountInMax, string Path,
-    IReadOnlyList<object>? MinHopPriceX36 = null) : SwapStep;
+    IReadOnlyList<object>? MinHopPriceX36 = null, bool? PayerIsUser = null) : SwapStep;
 
 public sealed record V4Swap(IReadOnlyList<V4Action> V4Actions) : SwapStep;
 
@@ -109,7 +117,7 @@ public sealed record V4SwapExactOutSingle(
     PoolKey PoolKey, bool ZeroForOne, object AmountOut, object AmountInMaximum, string HookData,
     object? MinHopPriceX36 = null) : V4Action;
 
-public sealed record V4Settle(string Currency, object Amount) : V4Action;
+public sealed record V4Settle(string Currency, object Amount, bool? PayerIsUser = null) : V4Action;
 
 public sealed record V4SettleAll(string Currency, object MaxAmount) : V4Action;
 
