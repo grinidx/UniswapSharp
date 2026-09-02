@@ -47,9 +47,9 @@ public static class EncodeV4Action
                         : new object?[] { PoolKeyTuple(a.PoolKey), a.ZeroForOne, a.AmountOut, a.AmountInMaximum, a.HookData },
                 });
 
-            // payerIsUser=false: same router-custody model as encodeSwapStep — funds are already in the router
             case V4Settle a:
-                return (Actions.SETTLE, new object?[] { a.Currency, a.Amount, false });
+                // payerIsUser defaults to false (router custody); ValidateEncodeSwaps gates when true is allowed
+                return (Actions.SETTLE, new object?[] { a.Currency, a.Amount, a.PayerIsUser == true });
             case V4SettleAll a:
                 return (Actions.SETTLE_ALL, new object?[] { a.Currency, a.MaxAmount });
             case V4Take a:

@@ -6,8 +6,7 @@ namespace UniswapSharp.UniversalRouter.Utils;
 /// <summary>Port of universal-router-sdk <c>utils/encodeSwapStep.ts</c>.</summary>
 public static class EncodeSwapStep
 {
-    // V2/V3 swap params hardcode payerIsUser=false; encodeSwaps pulls funds into the router first via
-    // PERMIT2_TRANSFER_FROM.
+    // payerIsUser defaults to false (router custody); ValidateEncodeSwaps gates when true is allowed.
     /// <summary>Encodes one router-owned <see cref="SwapStep"/> onto the planner.</summary>
     public static void Encode(RoutePlanner planner, SwapStep step, UniversalRouterVersion? urVersion = null)
     {
@@ -17,7 +16,7 @@ public static class EncodeSwapStep
         {
             case V2SwapExactIn s:
                 {
-                    var parms = new List<object?> { s.Recipient, s.AmountIn, s.AmountOutMin, s.Path.Cast<object?>().ToArray(), false };
+                    var parms = new List<object?> { s.Recipient, s.AmountIn, s.AmountOutMin, s.Path.Cast<object?>().ToArray(), s.PayerIsUser == true };
                     if (useV2_1_1)
                     {
                         parms.Add(MinHop(s.MinHopPriceX36));
@@ -27,7 +26,7 @@ public static class EncodeSwapStep
                 }
             case V2SwapExactOut s:
                 {
-                    var parms = new List<object?> { s.Recipient, s.AmountOut, s.AmountInMax, s.Path.Cast<object?>().ToArray(), false };
+                    var parms = new List<object?> { s.Recipient, s.AmountOut, s.AmountInMax, s.Path.Cast<object?>().ToArray(), s.PayerIsUser == true };
                     if (useV2_1_1)
                     {
                         parms.Add(MinHop(s.MinHopPriceX36));
@@ -37,7 +36,7 @@ public static class EncodeSwapStep
                 }
             case V3SwapExactIn s:
                 {
-                    var parms = new List<object?> { s.Recipient, s.AmountIn, s.AmountOutMin, s.Path, false };
+                    var parms = new List<object?> { s.Recipient, s.AmountIn, s.AmountOutMin, s.Path, s.PayerIsUser == true };
                     if (useV2_1_1)
                     {
                         parms.Add(MinHop(s.MinHopPriceX36));
@@ -47,7 +46,7 @@ public static class EncodeSwapStep
                 }
             case V3SwapExactOut s:
                 {
-                    var parms = new List<object?> { s.Recipient, s.AmountOut, s.AmountInMax, s.Path, false };
+                    var parms = new List<object?> { s.Recipient, s.AmountOut, s.AmountInMax, s.Path, s.PayerIsUser == true };
                     if (useV2_1_1)
                     {
                         parms.Add(MinHop(s.MinHopPriceX36));

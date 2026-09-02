@@ -66,21 +66,70 @@ public static class ValidateEncodeSwaps
     private static void AssertRouterRecipient(string recipient) =>
         Invariant(recipient == Constants.ROUTER_AS_RECIPIENT, "STEP_RECIPIENT_MUST_BE_ROUTER");
 
-    private static void AssertRouterActionRecipient(string recipient) =>
-        Invariant(recipient == Constants.ROUTER_AS_RECIPIENT, "V4_ACTION_RECIPIENT_MUST_BE_ROUTER");
+    // `routerOnlyError` is the surface's legacy flag-off code (steps vs v4 actions)
+    private static void CheckRecipient(NormalizedSwapSpecification spec, string recipient, string routerOnlyError)
+    {
+        if (recipient == Constants.ROUTER_AS_RECIPIENT)
+        {
+            return;
+        }
+        Invariant(spec.AllowDirectTransfers, routerOnlyError);
+        Invariant(spec.Fee is not PortionFee, "PORTION_FEE_REQUIRES_ROUTER_CUSTODY");
+        Invariant(string.Equals(recipient, spec.Recipient, StringComparison.OrdinalIgnoreCase), "STEP_RECIPIENT_NOT_ALLOWED");
+    }
 
-    // V4 actions that take a recipient must use router custody so the SDK's settlement sweeps see the funds
-    private static void ValidateV4Recipients(IEnumerable<V4Action> actions)
+    private static void ValidateV4Recipients(IEnumerable<V4Action> actions, NormalizedSwapSpecification spec)
     {
         foreach (var action in actions)
         {
             switch (action)
             {
+                // fees are sdk-authored (the envelope's PAY_PORTION); a step-level TAKE_PORTION never pays the fee recipient
                 case V4Take a:
-                    AssertRouterActionRecipient(a.Recipient);
+                    CheckRecipient(spec, a.Recipient, "V4_ACTION_RECIPIENT_MUST_BE_ROUTER");
                     break;
                 case V4TakePortion a:
-                    AssertRouterActionRecipient(a.Recipient);
+                    CheckRecipient(spec, a.Recipient, "V4_ACTION_RECIPIENT_MUST_BE_ROUTER");
+                    break;
+                // TAKE_ALL pays msgSender on-chain; any other spec recipient would be the wrong
+                // payee while still reducing their sweep floor.
+                case V4TakeAll:
+                    Invariant(spec.AllowDirectTransfers, "TAKE_ALL_REQUIRES_DIRECT_TRANSFERS");
+                    Invariant(spec.Fee is not PortionFee, "PORTION_FEE_REQUIRES_ROUTER_CUSTODY");
+                    // strict equality: the all-numeric sentinel has no checksum variant; anything else fails closed
+                    Invariant(spec.Recipient == Constants.SENDER_AS_RECIPIENT, "TAKE_ALL_REQUIRES_SENDER_RECIPIENT");
+                    break;
+            }
+        }
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex HexBytes =
+        new("^0x([0-9a-fA-F]{2})*$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    // Nethereum rejects non-hex hookData (e.g. "") deep inside abi encoding; fail loudly here instead
+    private static void ValidateV4HookData(IEnumerable<V4Action> actions)
+    {
+        foreach (var action in actions)
+        {
+            switch (action)
+            {
+                case V4SwapExactInSingle a:
+                    Invariant(HexBytes.IsMatch(a.HookData), "V4_HOOK_DATA_INVALID");
+                    break;
+                case V4SwapExactOutSingle a:
+                    Invariant(HexBytes.IsMatch(a.HookData), "V4_HOOK_DATA_INVALID");
+                    break;
+                case V4SwapExactIn a:
+                    foreach (var hop in a.Path)
+                    {
+                        Invariant(HexBytes.IsMatch(hop.HookData), "V4_HOOK_DATA_INVALID");
+                    }
+                    break;
+                case V4SwapExactOut a:
+                    foreach (var hop in a.Path)
+                    {
+                        Invariant(HexBytes.IsMatch(hop.HookData), "V4_HOOK_DATA_INVALID");
+                    }
                     break;
             }
         }
@@ -147,6 +196,19 @@ public static class ValidateEncodeSwaps
         // per-step: capability-gate by UR version, recipients must be router custody, per-hop arrays must match hop counts
         foreach (var step in swapSteps)
         {
+            if (!spec.AllowDirectTransfers)
+            {
+                Invariant(!DirectTransfers.HasUserPaidFlag(step), "PAYER_IS_USER_REQUIRES_DIRECT_TRANSFERS");
+                if (step is V4Swap gated)
+                {
+                    foreach (var action in gated.V4Actions)
+                    {
+                        Invariant(action is not V4SettleAll, "SETTLE_ALL_REQUIRES_DIRECT_TRANSFERS");
+                        Invariant(action is not V4TakeAll, "TAKE_ALL_REQUIRES_DIRECT_TRANSFERS");
+                    }
+                }
+            }
+
             if (spec.UrVersion == UniversalRouterVersion.V2_0)
             {
                 Invariant(!StepHasMinHop(step), "MIN_HOP_PRICE_X36_UNSUPPORTED_ON_V2_0");
@@ -156,37 +218,77 @@ public static class ValidateEncodeSwaps
             switch (step)
             {
                 case V2SwapExactIn s:
-                    AssertRouterRecipient(s.Recipient);
+                    CheckRecipient(spec, s.Recipient, "STEP_RECIPIENT_MUST_BE_ROUTER");
                     Invariant(s.MinHopPriceX36 is null || s.MinHopPriceX36.Count == s.Path.Count - 1, "V2_MIN_HOP_PRICE_X36_LENGTH_MISMATCH");
                     break;
                 case V2SwapExactOut s:
-                    AssertRouterRecipient(s.Recipient);
+                    CheckRecipient(spec, s.Recipient, "STEP_RECIPIENT_MUST_BE_ROUTER");
                     Invariant(s.MinHopPriceX36 is null || s.MinHopPriceX36.Count == s.Path.Count - 1, "V2_MIN_HOP_PRICE_X36_LENGTH_MISMATCH");
                     break;
                 case V3SwapExactIn s:
                     {
-                        AssertRouterRecipient(s.Recipient);
+                        CheckRecipient(spec, s.Recipient, "STEP_RECIPIENT_MUST_BE_ROUTER");
                         int? hopCount = GetV3HopCount(s.Path);
                         Invariant(hopCount is null || s.MinHopPriceX36 is null || s.MinHopPriceX36.Count == hopCount, "V3_MIN_HOP_PRICE_X36_LENGTH_MISMATCH");
                         break;
                     }
                 case V3SwapExactOut s:
                     {
-                        AssertRouterRecipient(s.Recipient);
+                        CheckRecipient(spec, s.Recipient, "STEP_RECIPIENT_MUST_BE_ROUTER");
                         int? hopCount = GetV3HopCount(s.Path);
                         Invariant(hopCount is null || s.MinHopPriceX36 is null || s.MinHopPriceX36.Count == hopCount, "V3_MIN_HOP_PRICE_X36_LENGTH_MISMATCH");
                         break;
                     }
+                // router-only in both regimes: this is the input-side transition, not an outbound payout
                 case WrapEth s:
                     AssertRouterRecipient(s.Recipient);
                     break;
                 case UnwrapWeth s:
-                    AssertRouterRecipient(s.Recipient);
+                    CheckRecipient(spec, s.Recipient, "STEP_RECIPIENT_MUST_BE_ROUTER");
                     break;
                 case V4Swap s:
                     ValidateV4HopCounts(s.V4Actions);
-                    ValidateV4Recipients(s.V4Actions);
+                    ValidateV4HookData(s.V4Actions);
+                    ValidateV4Recipients(s.V4Actions, spec);
                     break;
+            }
+        }
+
+        // Inbound budget: user-paid pulls must be concrete input-token amounts whose combined maxima
+        // fit within exactOrMaxAmountIn; the encoder then ingresses only the remainder, so total user
+        // outflow can never exceed the spec's input.
+        if (spec.AllowDirectTransfers && swapSteps.Any(step => DirectTransfers.StepUserPaidPulls(step).Count > 0))
+        {
+            // permit2-based direct pulls need a plain ERC20 input owned by the tx sender
+            Invariant(!spec.Routing.InputToken.IsNative, "DIRECT_TRANSFERS_NATIVE_INPUT");
+            Invariant(spec.NativeErc20Input != true, "DIRECT_TRANSFERS_NATIVE_ERC20_INPUT");
+            Invariant(spec.TokenTransferMode == Entities.Actions.TokenTransferMode.Permit2, "DIRECT_TRANSFERS_REQUIRES_PERMIT2");
+
+            BigInteger exactOrMaxAmountIn = ComputeEncodeSwapsAmounts.Compute(spec).ExactOrMaxAmountIn;
+            string inputTokenAddress = CurrencyAddress.GetCurrencyAddress(spec.Routing.InputToken).ToLowerInvariant();
+
+            BigInteger userPaidTotal = BigInteger.Zero;
+            for (int stepIndex = 0; stepIndex < swapSteps.Count; stepIndex++)
+            {
+                foreach (var pull in DirectTransfers.StepUserPaidPulls(swapSteps[stepIndex]))
+                {
+                    // concrete amounts only: bans ALREADY_PAID/OPEN_DELTA (0), CONTRACT_BALANCE (2^255),
+                    // and anything permit2's uint160 cannot move
+                    Invariant(pull.MaxAmount > 0 && pull.MaxAmount <= Constants.MAX_UINT160,
+                        $"USER_PAID_AMOUNT_OUT_OF_RANGE (step {stepIndex})");
+                    Invariant(pull.Token is not null, $"USER_PAID_MALFORMED_PATH (step {stepIndex})");
+                    Invariant(pull.Token!.ToLowerInvariant() == inputTokenAddress,
+                        $"USER_PAID_INPUT_TOKEN_MISMATCH (step {stepIndex})");
+                    userPaidTotal += pull.MaxAmount;
+                }
+            }
+            Invariant(userPaidTotal <= exactOrMaxAmountIn, "USER_PAID_EXCEEDS_MAX_INPUT");
+
+            // keeps the permit2 allowance an on-chain outer ceiling equal to the budget
+            if (spec.Permit is not null)
+            {
+                Invariant(spec.Permit.Details.Token.ToLowerInvariant() == inputTokenAddress, "PERMIT_TOKEN_MISMATCH");
+                Invariant(spec.Permit.Details.Amount >= exactOrMaxAmountIn, "PERMIT_AMOUNT_INSUFFICIENT");
             }
         }
     }
