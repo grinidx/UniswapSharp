@@ -82,6 +82,7 @@ public static class Constants
         [196] = 1, // xlayer
         [1301] = 1, // unichain sepolia
         [4663] = 0.1, // robinhood (arbitrum orbit) — L2 arbBlockNumber cadence
+        [5042] = 0.5, // arc
         [8453] = 2, // base
         [42161] = 0.25, // arbitrum one — L2 arbBlockNumber cadence (NOT the L1 block.number ~12s)
         [43114] = 1, // avalanche

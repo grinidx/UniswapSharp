@@ -14,7 +14,7 @@ public class AddressesTests
     public void GetLauncherAddresses_ReturnsUnichainLbpStrategySingleton()
     {
         var addresses = Addresses.GetLauncherAddresses((int)SupportedChainId.UNICHAIN);
-        Assert.Equal(GetAddress("0x824a3ecde463dd45cc156b64cefa132596c9a000"), addresses?.LbpStrategy);
+        Assert.Equal(GetAddress("0x298ea05d0356b2ae5ccaa3169e471783ee9ea000"), addresses?.LbpStrategy);
     }
 
     [Fact]
@@ -32,12 +32,68 @@ public class AddressesTests
     [Fact]
     public void GetLauncherAddresses_ReturnsPerChainLbpStrategySingletons()
     {
-        Assert.Equal(GetAddress("0xcacd77134b072b4ad5621f585b0b422c6da4e000"),
+        Assert.Equal(GetAddress("0x57bd0a9cd933c89ba55e086d53031367b6406000"),
             Addresses.GetLauncherAddresses((int)SupportedChainId.AVALANCHE)?.LbpStrategy);
-        Assert.Equal(GetAddress("0x95bcb80e3804a085d23778f2956c305d6488e000"),
+        Assert.Equal(GetAddress("0x58df162ff41e5cb42b8515f75f90c1841938a000"),
             Addresses.GetLauncherAddresses((int)SupportedChainId.XLAYER)?.LbpStrategy);
-        Assert.Equal(GetAddress("0x843747f4c08e3393e55508f577296ba48e8ca000"),
+        Assert.Equal(GetAddress("0x05d552391067389ee44fec3924157ed33f976000"),
             Addresses.GetLauncherAddresses((int)SupportedChainId.ROBINHOOD)?.LbpStrategy);
+        Assert.Equal(GetAddress("0xe9f36bcc222a6d2e459529d787f8c060d543a000"),
+            Addresses.GetLauncherAddresses((int)SupportedChainId.ARC)?.LbpStrategy);
+    }
+
+    // ---- the #223/#227 redeployed launcher (upstream 35c4e35) ----
+
+    [Fact]
+    public void GetLauncherAddresses_UsesTheRedeployedLauncherOnRobinhoodAndArc()
+    {
+        string redeployed = GetAddress("0x0000ffffbe8efe702c8703ae3477ff5de3d319c0");
+        Assert.Equal(redeployed, Addresses.GetLauncherAddresses((int)SupportedChainId.ROBINHOOD)?.LiquidityLauncher);
+        Assert.Equal(redeployed, Addresses.GetLauncherAddresses((int)SupportedChainId.ARC)?.LiquidityLauncher);
+
+        // every other chain keeps the original mined vanity address
+        Assert.NotEqual(redeployed, Addresses.GetLauncherAddresses((int)SupportedChainId.MAINNET)?.LiquidityLauncher);
+    }
+
+    [Fact]
+    public void GetLauncherAddresses_CarriesUniversalRouterStrategyOnlyWhereDeployed()
+    {
+        Assert.Equal(GetAddress("0x1242c9439d589cae85e121b1f79f2af51e91dcee"),
+            Addresses.GetLauncherAddresses((int)SupportedChainId.ROBINHOOD)?.UniversalRouterStrategy);
+        Assert.Equal(GetAddress("0x0a122717bc36e3c7a7958128a5c789e0b070b3ae"),
+            Addresses.GetLauncherAddresses((int)SupportedChainId.ARC)?.UniversalRouterStrategy);
+        Assert.Null(Addresses.GetLauncherAddresses((int)SupportedChainId.MAINNET)?.UniversalRouterStrategy);
+    }
+
+    [Fact]
+    public void GetLauncherAddresses_UsesTheBlocknumberishAwareCcaFactoryOnEveryChain()
+    {
+        // the 2026-07-09 v1.1.0 redeploy is now the ccaFactory everywhere, not just Robinhood
+        string current = GetAddress("0x000000001f26a0044baa66024e7b6599c61963f8");
+        foreach (var chain in new[]
+        {
+            SupportedChainId.MAINNET, SupportedChainId.ROBINHOOD, SupportedChainId.ARC, SupportedChainId.BASE,
+        })
+        {
+            Assert.Equal(current, Addresses.GetLauncherAddresses((int)chain)?.CcaFactory);
+        }
+    }
+
+    [Fact]
+    public void GetTickDataLensForFactory_StillResolvesTheLegacyCcaFactory()
+    {
+        // retained so auctions created before the redeploy can still be read
+        Assert.Equal(Addresses.TICK_DATA_LENS_V2,
+            Addresses.GetTickDataLensForFactory("0x00cca200bf124dbfa848937c553864f4b4ce0632"));
+    }
+
+    [Fact]
+    public void GetLauncherAddresses_UsesArcsOwnUerc20Factory()
+    {
+        Assert.Equal(GetAddress("0xff99d8f6c994607576eb652edcf12e04a7ebfbf6"),
+            Addresses.GetLauncherAddresses((int)SupportedChainId.ARC)?.Uerc20Factory);
+        Assert.NotEqual(Addresses.GetLauncherAddresses((int)SupportedChainId.ARC)?.Uerc20Factory,
+            Addresses.GetLauncherAddresses((int)SupportedChainId.MAINNET)?.Uerc20Factory);
     }
 
     // ---- getTickDataLensForFactory ----

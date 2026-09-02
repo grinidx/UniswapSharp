@@ -14,6 +14,10 @@ public record LauncherAddresses(
     string CcaFactory,
     // Permit2 (canonical address on every chain).
     string Permit2,
+    // UniversalRouterStrategy singleton: the launcher-gated strategy that runs a caller-supplied
+    // Universal Router route, so a launch and a creator buy fit in one multicall. Optional —
+    // deployed only on chains carrying the redeployed launcher.
+    string? UniversalRouterStrategy = null,
     // uERC20 factory (Ethereum-style chains). Optional.
     string? Uerc20Factory = null,
     // super-uERC20 factory (superchains). Optional.
@@ -45,13 +49,30 @@ public static class Addresses
 
     // Deployed at the same CREATE2 address on every supported chain.
     private static readonly string LIQUIDITY_LAUNCHER = GetAddress("0x00004c4ccc709Ef590F7C81102C0689F0263D4e9");
-    private static readonly string CCA_FACTORY = GetAddress("0x00cCa200BF124dBfA848937c553864f4B4CE0632");
-    // Robinhood-only redeploy (2026-07-09): blocknumberish-aware CCA factory.
-    private static readonly string CCA_FACTORY_ROBINHOOD = GetAddress("0x000000001F26a0044BaA66024e7b6599c61963F8");
+    // The #223/#227 redeployed launcher: the redeploy changed the launcher's bytecode, so the original
+    // mined vanity salt no longer resolves to LIQUIDITY_LAUNCHER. Deployed on Robinhood (4663, the
+    // 2026-08-05 full redeploy) and Arc (5042); once it is on every chain this collapses back into
+    // LIQUIDITY_LAUNCHER.
+    private static readonly string LIQUIDITY_LAUNCHER_REDEPLOYED = GetAddress("0x0000FffFBE8efE702c8703aE3477FF5dE3d319C0");
+    // UniversalRouterStrategy, pinned to LIQUIDITY_LAUNCHER_REDEPLOYED as a constructor immutable.
+    private static readonly string UNIVERSAL_ROUTER_STRATEGY_ROBINHOOD = GetAddress("0x1242c9439d589cAE85E121B1f79f2aF51e91DCEE");
+    // Arc's deploy sits at a different address than Robinhood's despite the same launcher immutable.
+    private static readonly string UNIVERSAL_ROUTER_STRATEGY_ARC = GetAddress("0x0A122717bc36E3C7A7958128a5C789E0b070b3Ae");
+    // Current CCA factory: the 2026-07-09 redeploy built against blocknumberish v1.1.0, which translates
+    // block.number on every chain that needs it. Every v3.1.0 LBPStrategy creates its auction through
+    // this factory, so it is the ccaFactory for all chains.
+    private static readonly string CCA_FACTORY = GetAddress("0x000000001F26a0044BaA66024e7b6599c61963F8");
+    // Legacy CCA factory (blocknumberish v1.0.x), used by the pre-v3.1.0 strategies. Retained only so
+    // the auction-factory registry can still resolve auctions created before the redeploy.
+    private static readonly string CCA_FACTORY_LEGACY = GetAddress("0x00cCa200BF124dBfA848937c553864f4B4CE0632");
     private static readonly string TOKEN_SPLITTER = GetAddress("0x8B7DCeb5639DB986FCf86606C74e6300C40FE3cd");
+    // 2026-08-05 full-redeploy TokenSplitter, chain 4663 only.
+    private static readonly string TOKEN_SPLITTER_ROBINHOOD = GetAddress("0x4F5E3FBb9745358A92Da5674305FAb8D2B8a73cE");
 
     private static readonly string UERC20_FACTORY = GetAddress("0x000000e200088D55C39a11F609E5F667729ad49b");
     private static readonly string USUPERC20_FACTORY = GetAddress("0xeEeeEEE204Afb6BABb1287ffed52cCD6BA0b0fb2");
+    // Arc's uERC20 factory is not at the shared CREATE2 address.
+    private static readonly string UERC20_FACTORY_ARC = GetAddress("0xFf99D8f6C994607576eB652EDCf12E04a7EbfBf6");
 
     private static readonly string POSITION_MANAGER_MAINNET = GetAddress("0xbD216513d74C8cf14cf4747E6AaA6420FF64ee9e");
     private static readonly string POSITION_MANAGER_UNICHAIN = GetAddress("0x4529A01c7A0410167c5740C487A8DE60232617bf");
@@ -60,6 +81,7 @@ public static class Addresses
     private static readonly string POSITION_MANAGER_AVALANCHE = GetAddress("0xB74b1F14d2754AcfcbBe1a221023a5cf50Ab8ACD");
     private static readonly string POSITION_MANAGER_XLAYER = GetAddress("0xcF1EAFC6928dC385A342E7C6491d371d2871458b");
     private static readonly string POSITION_MANAGER_ROBINHOOD = GetAddress("0x58daec3116aae6D93017bAAea7749052E8a04fA7");
+    private static readonly string POSITION_MANAGER_ARC = GetAddress("0x6049c9a0e26405C0985f9E3685C87d0aE917f82B");
     private static readonly string POSITION_MANAGER_SEPOLIA = GetAddress("0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4");
     private static readonly string POSITION_MANAGER_BASE_SEPOLIA = GetAddress("0x4B2C77d209D3405F41a037Ec6c77F7F5b8e2ca80");
 
@@ -68,39 +90,56 @@ public static class Addresses
         new Dictionary<int, LauncherAddresses>
         {
             [(int)SupportedChainId.MAINNET] = new(
-                LIQUIDITY_LAUNCHER, GetAddress("0xb98766A35cdc28415be0767D4EA41e39fBA3e000"), TOKEN_SPLITTER,
-                CCA_FACTORY, PERMIT2, UERC20_FACTORY, USUPERC20_FACTORY, POSITION_MANAGER_MAINNET),
+                LIQUIDITY_LAUNCHER, GetAddress("0x49380c4EfaB1b491006aF7FabAB8B3459F0E6000"), TOKEN_SPLITTER,
+                CCA_FACTORY, PERMIT2, UniversalRouterStrategy: null,
+                Uerc20Factory: UERC20_FACTORY, Usuperc20Factory: USUPERC20_FACTORY,
+                PositionManager: POSITION_MANAGER_MAINNET),
             [(int)SupportedChainId.UNICHAIN] = new(
-                LIQUIDITY_LAUNCHER, GetAddress("0x824A3eCDe463DD45cC156b64CEfA132596C9A000"), TOKEN_SPLITTER,
-                CCA_FACTORY, PERMIT2, Uerc20Factory: null, Usuperc20Factory: USUPERC20_FACTORY,
+                LIQUIDITY_LAUNCHER, GetAddress("0x298eA05D0356B2Ae5cCAa3169E471783ee9EA000"), TOKEN_SPLITTER,
+                CCA_FACTORY, PERMIT2, UniversalRouterStrategy: null,
+                Uerc20Factory: null, Usuperc20Factory: USUPERC20_FACTORY,
                 PositionManager: POSITION_MANAGER_UNICHAIN),
             [(int)SupportedChainId.BASE] = new(
-                LIQUIDITY_LAUNCHER, GetAddress("0x5bB4bAfafEc57BEd50D864AAA9D1ef992611e000"), TOKEN_SPLITTER,
-                CCA_FACTORY, PERMIT2, Uerc20Factory: null, Usuperc20Factory: USUPERC20_FACTORY,
+                LIQUIDITY_LAUNCHER, GetAddress("0x34385dD739FE5464892BF0bA4CC42492804dA000"), TOKEN_SPLITTER,
+                CCA_FACTORY, PERMIT2, UniversalRouterStrategy: null,
+                Uerc20Factory: null, Usuperc20Factory: USUPERC20_FACTORY,
                 PositionManager: POSITION_MANAGER_BASE),
             [(int)SupportedChainId.ARBITRUM_ONE] = new(
-                LIQUIDITY_LAUNCHER, GetAddress("0x18608AD558dcD233F7854242bbAef73988Bee000"), TOKEN_SPLITTER,
-                CCA_FACTORY, PERMIT2, UERC20_FACTORY, Usuperc20Factory: null,
+                LIQUIDITY_LAUNCHER, GetAddress("0x8Af0775a70Cc94D71DFc0fE809435e833F2Fe000"), TOKEN_SPLITTER,
+                CCA_FACTORY, PERMIT2, UniversalRouterStrategy: null,
+                Uerc20Factory: UERC20_FACTORY, Usuperc20Factory: null,
                 PositionManager: POSITION_MANAGER_ARBITRUM),
             [(int)SupportedChainId.AVALANCHE] = new(
-                LIQUIDITY_LAUNCHER, GetAddress("0xcAcd77134b072b4AD5621f585b0b422C6Da4E000"), TOKEN_SPLITTER,
-                CCA_FACTORY, PERMIT2, UERC20_FACTORY, Usuperc20Factory: null,
+                LIQUIDITY_LAUNCHER, GetAddress("0x57BD0A9Cd933c89Ba55e086D53031367b6406000"), TOKEN_SPLITTER,
+                CCA_FACTORY, PERMIT2, UniversalRouterStrategy: null,
+                Uerc20Factory: UERC20_FACTORY, Usuperc20Factory: null,
                 PositionManager: POSITION_MANAGER_AVALANCHE),
             [(int)SupportedChainId.XLAYER] = new(
-                LIQUIDITY_LAUNCHER, GetAddress("0x95bcb80e3804a085d23778F2956c305d6488e000"), TOKEN_SPLITTER,
-                CCA_FACTORY, PERMIT2, UERC20_FACTORY, Usuperc20Factory: null,
+                LIQUIDITY_LAUNCHER, GetAddress("0x58DF162fF41e5cB42B8515f75F90C1841938A000"), TOKEN_SPLITTER,
+                CCA_FACTORY, PERMIT2, UniversalRouterStrategy: null,
+                Uerc20Factory: UERC20_FACTORY, Usuperc20Factory: null,
                 PositionManager: POSITION_MANAGER_XLAYER),
             [(int)SupportedChainId.ROBINHOOD] = new(
-                LIQUIDITY_LAUNCHER, GetAddress("0x843747f4c08E3393E55508F577296bA48E8Ca000"), TOKEN_SPLITTER,
-                CCA_FACTORY_ROBINHOOD, PERMIT2, UERC20_FACTORY, Usuperc20Factory: null,
+                LIQUIDITY_LAUNCHER_REDEPLOYED, GetAddress("0x05d552391067389EE44fec3924157ed33F976000"),
+                TOKEN_SPLITTER_ROBINHOOD, CCA_FACTORY, PERMIT2,
+                UniversalRouterStrategy: UNIVERSAL_ROUTER_STRATEGY_ROBINHOOD,
+                Uerc20Factory: UERC20_FACTORY, Usuperc20Factory: null,
                 PositionManager: POSITION_MANAGER_ROBINHOOD),
+            [(int)SupportedChainId.ARC] = new(
+                LIQUIDITY_LAUNCHER_REDEPLOYED, GetAddress("0xe9f36bcc222a6d2e459529D787f8c060d543A000"),
+                TOKEN_SPLITTER, CCA_FACTORY, PERMIT2,
+                UniversalRouterStrategy: UNIVERSAL_ROUTER_STRATEGY_ARC,
+                Uerc20Factory: UERC20_FACTORY_ARC, Usuperc20Factory: null,
+                PositionManager: POSITION_MANAGER_ARC),
             [(int)SupportedChainId.SEPOLIA] = new(
-                LIQUIDITY_LAUNCHER, GetAddress("0x3f37838651B5AD71D4e01Ec9745862A5D9DF2000"), TOKEN_SPLITTER,
-                CCA_FACTORY, PERMIT2, UERC20_FACTORY, Usuperc20Factory: null,
+                LIQUIDITY_LAUNCHER, GetAddress("0x96641d91e223c766F45b19d09494F5925C3cE000"), TOKEN_SPLITTER,
+                CCA_FACTORY, PERMIT2, UniversalRouterStrategy: null,
+                Uerc20Factory: UERC20_FACTORY, Usuperc20Factory: null,
                 PositionManager: POSITION_MANAGER_SEPOLIA),
             [(int)SupportedChainId.BASE_SEPOLIA] = new(
-                LIQUIDITY_LAUNCHER, GetAddress("0x0e1793a989c682117fcBfB3a9aA8e451D37D2000"), TOKEN_SPLITTER,
-                CCA_FACTORY, PERMIT2, Uerc20Factory: null, Usuperc20Factory: USUPERC20_FACTORY,
+                LIQUIDITY_LAUNCHER, GetAddress("0xB06428b62c259eE982cE3D9BED47391dC9A5E000"), TOKEN_SPLITTER,
+                CCA_FACTORY, PERMIT2, UniversalRouterStrategy: null,
+                Uerc20Factory: null, Usuperc20Factory: USUPERC20_FACTORY,
                 PositionManager: POSITION_MANAGER_BASE_SEPOLIA),
         };
 
@@ -126,8 +165,8 @@ public static class Addresses
     {
         new AuctionFactoryDeployment(TWA_FACTORY_V1, TICK_DATA_LENS_V1, "v1 TWA auction factory"),
         new AuctionFactoryDeployment(CCA_FACTORY_EARLY_TEST, TICK_DATA_LENS_V2, "v2 CCA factory (early test deploy)"),
-        new AuctionFactoryDeployment(CCA_FACTORY, TICK_DATA_LENS_V2, "v2 CCA factory (contracts v2.0.0, deployed on all supported chains)"),
-        new AuctionFactoryDeployment(CCA_FACTORY_ROBINHOOD, TICK_DATA_LENS_V2, "v2 CCA factory (2026-07-09 blocknumberish-aware redeploy, contracts v1.1.x)"),
+        new AuctionFactoryDeployment(CCA_FACTORY_LEGACY, TICK_DATA_LENS_V2, "v2 CCA factory (blocknumberish v1.0.x; superseded by the 2026-07-09 redeploy)"),
+        new AuctionFactoryDeployment(CCA_FACTORY, TICK_DATA_LENS_V2, "v2 CCA factory (2026-07-09 blocknumberish v1.1.0 redeploy; current on all chains)"),
     };
 
     /// <summary>
