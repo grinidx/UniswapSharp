@@ -93,6 +93,15 @@ public class RoutePlanner
     private const string PERMIT2_TRANSFER_FROM_STRUCT = "(address from,address to,uint160 amount,address token)";
     private const string PERMIT2_TRANSFER_FROM_BATCH_STRUCT = PERMIT2_TRANSFER_FROM_STRUCT + "[]";
 
+    // Must be encoded as a SINGLE tuple: ChainedActions.sol decodes the command input with
+    // `abi.decode(input, (AcrossV4DepositV3Params))`, and because the struct has a dynamic
+    // member (`bytes message`) that encoding is offset-prefixed — a flat 13-value encoding of
+    // the same fields does not decode and makes the router revert with empty data.
+    private const string ACROSS_V4_DEPOSIT_V3_STRUCT =
+        "(address depositor,address recipient,address inputToken,address outputToken," +
+        "uint256 inputAmount,uint256 outputAmount,uint256 destinationChainId,address exclusiveRelayer," +
+        "uint32 quoteTimestamp,uint32 fillDeadline,uint32 exclusivityDeadline,bytes message,bool useNative)";
+
     private static ParamType P(string name, string type, Subparser? subparser = null) => new(name, type, subparser);
 
     private static CommandDefinition Abi(params ParamType[] parms) =>
@@ -157,20 +166,7 @@ public class RoutePlanner
             [CommandType.V4_POSITION_MANAGER_CALL] = new CommandDefinition { Parser = Parser.V4Actions },
 
             // 3rd Party Integrations
-            [CommandType.ACROSS_V4_DEPOSIT_V3] = Abi(
-                P("depositor", "address"),
-                P("recipient", "address"),
-                P("inputToken", "address"),
-                P("outputToken", "address"),
-                P("inputAmount", "uint256"),
-                P("outputAmount", "uint256"),
-                P("destinationChainId", "uint256"),
-                P("exclusiveRelayer", "address"),
-                P("quoteTimestamp", "uint32"),
-                P("fillDeadline", "uint32"),
-                P("exclusivityDeadline", "uint32"),
-                P("message", "bytes"),
-                P("useNative", "bool")),
+            [CommandType.ACROSS_V4_DEPOSIT_V3] = Abi(P("params", ACROSS_V4_DEPOSIT_V3_STRUCT)),
         };
 
     /// <summary>V2.1.1 ABI definitions for V2/V3 swap commands (extended with <c>minHopPriceX36</c>).</summary>
@@ -252,21 +248,27 @@ public class RoutePlanner
     /// <summary>Adds an Across bridge deposit command for cross-chain bridging.</summary>
     public RoutePlanner AddAcrossBridge(AcrossV4DepositV3Params parms)
     {
+        // One value, not thirteen: the command input is a single offset-prefixed tuple
+        // (ACROSS_V4_DEPOSIT_V3_STRUCT) so the contract's
+        // `abi.decode(input, (AcrossV4DepositV3Params))` can read it.
         AddCommand(CommandType.ACROSS_V4_DEPOSIT_V3, new object?[]
         {
-            parms.Depositor,
-            parms.Recipient,
-            parms.InputToken,
-            parms.OutputToken,
-            parms.InputAmount,
-            parms.OutputAmount,
-            parms.DestinationChainId,
-            parms.ExclusiveRelayer,
-            parms.QuoteTimestamp,
-            parms.FillDeadline,
-            parms.ExclusivityDeadline,
-            parms.Message,
-            parms.UseNative,
+            new object?[]
+            {
+                parms.Depositor,
+                parms.Recipient,
+                parms.InputToken,
+                parms.OutputToken,
+                parms.InputAmount,
+                parms.OutputAmount,
+                parms.DestinationChainId,
+                parms.ExclusiveRelayer,
+                parms.QuoteTimestamp,
+                parms.FillDeadline,
+                parms.ExclusivityDeadline,
+                parms.Message,
+                parms.UseNative,
+            },
         });
         return this;
     }
