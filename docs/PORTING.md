@@ -149,7 +149,8 @@ The pinned commit in §1 stays at `6081b3e` until the last one lands.
 
 - [x] PR 1 — `Core` address + chain registry (sepolia TickLens, permissioned V4 + hooks, Arc block time)
 - [x] PR 2 — small independent fixes (`Router` midPrice + partition, `UniswapX` Ink, `SmartWallet` Monad, UR sepolia address). UniswapX #685/#686 excluded: `multicall.ts`/`OrderQuoter.ts` were never ported, so they are new surface rather than a re-sync — see §14.
-- [ ] PR 3 — `UniversalRouter` encoding (V4 exact-out TAKE floor, ACROSS tuple, direct transfers)
+- [x] PR 3 — `UniversalRouter` encoding fixes (V4 exact-out TAKE floor, ACROSS single-tuple input)
+- [ ] PR 3b — `UniversalRouter` direct transfers (#638): new `DirectTransfers` surface on the encodeSwaps path
 - [ ] PR 4 — `LiquidityLauncher` registry + config (incl. the breaking `BuildPositionDefinitions` signature)
 - [ ] PR 5 — `LiquidityLauncher` launch surface; bump the §1 pin to `35c4e35`
 
