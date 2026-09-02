@@ -473,8 +473,23 @@ public sealed class UniswapTrade : ICommand
             }
         }
 
+        // Floor exact-out delivery: TAKE the exact leg amountOut instead of OPEN_DELTA, so an
+        // under-delivering pool (e.g. liquidity exhausted at the price limit) leaves an unsettled
+        // delta and reverts at unlock instead of silently forwarding a partial fill.
+        BigInteger? takeAmount = null;
+        if (tradeType == UniswapSharp.Core.TradeType.EXACT_OUTPUT)
+        {
+            takeAmount = swap.OutputAmount.Quotient;
+            // amount 0 encodes as the OPEN_DELTA sentinel, which would silently drop the floor
+            if (takeAmount.Value.IsZero)
+            {
+                throw new ArgumentException("ZERO_EXACT_OUTPUT_AMOUNT");
+            }
+        }
+
         v4Planner.AddTake(pathOutputForTake,
-            routerMustCustody ? Constants.ROUTER_AS_RECIPIENT : options.Recipient ?? Constants.SENDER_AS_RECIPIENT);
+            routerMustCustody ? Constants.ROUTER_AS_RECIPIENT : options.Recipient ?? Constants.SENDER_AS_RECIPIENT,
+            takeAmount);
         planner.AddCommand(CommandType.V4_SWAP, new object?[] { v4Planner.Finalize() });
     }
 
