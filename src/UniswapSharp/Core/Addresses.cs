@@ -111,7 +111,8 @@ public static class Addresses
         V4PositionManagerAddress = "0xbd216513d74c8cf14cf4747e6aaa6420ff64ee9e",
         V4StateView = "0x7ffe42c4a5deea5b0fec41c94c136cf115597227",
         V4QuoterAddress = "0x52f0e24d1c21c8a0cb1e5a5dd6198556bd9e1203",
-        PermissionedV4PositionManagerAddress = "0x89628C9B4CE81951a9BC1F36F0688Fad6A6ee248"
+        PermissionedV4PositionManagerAddress = "0x63Bd7e5D4EcfAA74d82AE1dE98F476C935a81973",
+        PermissionedV4HooksAddress = "0x499a724Ab630549f14C995EC41a8E04fA3fd28c0"
     };
 
     private static readonly ChainAddresses GOERLI_ADDRESSES = new()
@@ -262,7 +263,8 @@ public static class Addresses
         V4PositionManagerAddress = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
         V4StateView = "0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c",
         V4QuoterAddress = "0x61b3f2011a92d183c7dbadbda940a7555ccf9227",
-        PermissionedV4PositionManagerAddress = "0x68fC145BB20b388965bED184Df5ef912215bb3C7"
+        PermissionedV4PositionManagerAddress = "0xf99D553912084c99F6299291b75Fe9B7119Aa1A7",
+        PermissionedV4HooksAddress = "0x51247E2291d290d17C08813A175AC86465EdE8c0"
     };
 
     // Avalanche v3 addresses

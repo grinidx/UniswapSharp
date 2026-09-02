@@ -18,4 +18,5 @@ public class ChainAddresses
     public string? V4StateView { get; set; }
     public string? V4QuoterAddress { get; set; }
     public string? PermissionedV4PositionManagerAddress { get; set; }
+    public string? PermissionedV4HooksAddress { get; set; }
 }
