@@ -50,8 +50,11 @@ and `UniversalRouter/Utils/DirectTransfers.cs`.
 
 ## 3. Approach: five sequenced PRs
 
-One PR per coherent slice, ordered by dependency. Each is test-first, green before merge,
-and updates its own `docs/PORTING.md` rows.
+One PR per coherent slice, ordered by dependency. Each is test-first and green before merge.
+
+`docs/PORTING.md` gets a checklist under §7 tracking which slices have landed; individual
+mapping-table rows are updated only where a table exists for the package — `sdk-core` has
+none, so PR 1 only ticks its box. PR 5 removes the checklist and bumps the §1 pin.
 
 ### PR 1 — `Core` address and chain registry
 
@@ -59,8 +62,11 @@ Foundation: every other module resolves addresses and chain IDs through these ta
 a wrong value here propagates. Data-only, no logic.
 
 - Sepolia `tickLensAddress` was set to the multicall address (#654). A real bug.
-- Canonical `PermissionedHooks` addresses for mainnet and sepolia (#657).
+- Canonical `PermissionedHooks` addresses for mainnet and sepolia (#657), which adds a new
+  `permissionedV4HooksAddress` field to the `ChainAddresses` shape.
 - Permissioned-pools address correction for mainnet and sepolia (#692).
+- Arc average block time `0.48` → `0.5`. `SecondsToBlocks` divides by it, so the stale
+  value also made `ceil(8 / 0.48) = 17` where upstream now expects `16`.
 
 Vectors: upstream `sdk-core/src/chains.test.ts`.
 
