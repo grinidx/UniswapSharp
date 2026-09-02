@@ -108,4 +108,11 @@ public class AddressesTests
         string address = Addresses.SWAP_ROUTER_02_ADDRESSES(ChainId.INK);
         Assert.Equal("0x177778f19e89dd1012bdbe603f144088a95c4b53", address);
     }
+
+    [Fact]
+    public void TickLensAddresses_ShouldReturnCorrectAddress_ForSepolia()
+    {
+        // Upstream #654: this entry previously held the multicall address, not TickLens.
+        Assert.Equal("0x0b343475d44EC2b4b8243EBF81dc888BF0A14b36", Addresses.TICK_LENS_ADDRESSES[ChainId.SEPOLIA]);
+    }
 }

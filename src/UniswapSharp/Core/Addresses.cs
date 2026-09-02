@@ -253,7 +253,7 @@ public static class Addresses
         QuoterAddress = "0xEd1f6473345F45b75F8179591dd5bA1888cf2FB3",
         V3MigratorAddress = "0x729004182cF005CEC8Bd85df140094b6aCbe8b15",
         NonfungiblePositionManagerAddress = "0x1238536071E1c677A632429e3655c799b22cDA52",
-        TickLensAddress = "0xd7f33bcdb21b359c8ee6f0251d30e94832baad07",
+        TickLensAddress = "0x0b343475d44EC2b4b8243EBF81dc888BF0A14b36",
         SwapRouter02Address = "0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E",
         // TODO: update mixedRouteQuoterV2Address once v4 on sepolia redeployed
         MixedRouteQuoterV2Address = "0x4745f77b56a0e2294426e3936dc4fab68d9543cd",
