@@ -65,7 +65,7 @@ public static class Constants
         var map = ConstructSameAddressMap(
             "0x000000000022d473030f116ddee9f6b43ac78ba3",
             11155111, 10, 30, 56, 100, 143, 196, 480, 1284, 1868, 4217, 4326,
-            4663, 5042, 10143, 42161, 42220, 43114, 59144, 81457, 84532,
+            4663, 5042, 10143, 42161, 42220, 43114, 57073, 59144, 81457, 84532,
             421614, 7777777, 11155420, 999999999);
         map[12341234] = "0x000000000022d473030f116ddee9f6b43ac78ba3";
         map[1301] = "0x000000000022d473030f116ddee9f6b43ac78ba3";
@@ -97,6 +97,7 @@ public static class Constants
         map[5042] = "0x00000000a3db63Df9078cBF3dF88B4CAdD5a7F58";
         map[42220] = "0x00000000a3db63Df9078cBF3dF88B4CAdD5a7F58";
         map[43114] = "0x00000000a3db63Df9078cBF3dF88B4CAdD5a7F58";
+        map[57073] = "0x00000000a3db63Df9078cBF3dF88B4CAdD5a7F58";
         map[81457] = "0x00000000a3db63Df9078cBF3dF88B4CAdD5a7F58";
         map[7777777] = "0x00000000a3db63Df9078cBF3dF88B4CAdD5a7F58";
         return map;
@@ -140,6 +141,7 @@ public static class Constants
         map[5042] = "0x0000000000000000000000000000000000000000";
         map[42220] = "0x0000000000000000000000000000000000000000";
         map[43114] = "0x0000000000000000000000000000000000000000";
+        map[57073] = "0x0000000000000000000000000000000000000000";
         map[81457] = "0x0000000000000000000000000000000000000000";
         map[7777777] = "0x0000000000000000000000000000000000000000";
         return map;
@@ -226,6 +228,7 @@ public static class Constants
         map[5042] = Reactors((OrderType.Dutch_V3, "0x0000000015134054eA82AE0bb9fda66b36402C36"));
         map[42220] = Reactors((OrderType.Dutch_V3, "0x00000000B8077fdf2281A80bE96f6c282B5d943A"));
         map[43114] = Reactors((OrderType.Dutch_V3, "0x00000000862cCF095823fc7576Fa6C7e6b7385ef"));
+        map[57073] = Reactors((OrderType.Dutch_V3, "0x000000007A1C8e570011EeDF86A2A35593013cBA"));
         map[81457] = Reactors((OrderType.Dutch_V3, "0x0000000086f50C5E1a2500602183D4390A7FFc98"));
         map[7777777] = Reactors((OrderType.Dutch_V3, "0x000000002C9A3812e15cf233190992E9a57EDB56"));
         return map;

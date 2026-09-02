@@ -69,7 +69,7 @@ public static class Constants
             (UniversalRouterVersion.V1_2, "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD", 17143817),
             (UniversalRouterVersion.V2_0, "0x66a9893cc07d91d95644aedd05d03f95e1dba8af", 21689092),
             (UniversalRouterVersion.V2_1_1, "0x4C82D1fBFe28C977cBB58D8C7FF8FCF9F70a2cCA", 24680568),
-            (UniversalRouterVersion.V2_2_0, "0xCb640A86855f1A828c27241bA364348de28abe66", 25195294)),
+            (UniversalRouterVersion.V2_2_0, "0x0542093271A31f6FC1DADB232bd59eeb27de780F", 25733844)),
             SWAP_PROXY_DEPLOY_ADDRESS),
         // goerli
         [5] = new("0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6", Rc(
@@ -79,8 +79,8 @@ public static class Constants
         [11155111] = new("0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14", Rc(
             (UniversalRouterVersion.V1_2, "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD", 3543575),
             (UniversalRouterVersion.V2_0, "0x3a9d48ab9751398bbfa63ad67599bb04e4bdf98b", 7259601),
-            (UniversalRouterVersion.V2_1_1, "0x8B844f885672f333Bc0042cB669255f93a4C1E6b", 10470160),
-            (UniversalRouterVersion.V2_2_0, "0xB0C89059d7190EDb17eFF19829cc009cEe923916", 10941522)),
+            (UniversalRouterVersion.V2_1_1, "0x7DfD4F31be6814D2906BDE155c3e1B146EAc1468", 11343084),
+            (UniversalRouterVersion.V2_2_0, "0x54C707Df83f03bc9cA64ED2CcF9C99B63FD854b7", 11468175)),
             SWAP_PROXY_DEPLOY_ADDRESS),
         // polygon
         [137] = new("0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270", Rc(

@@ -66,6 +66,16 @@ public class ConstantsTests
     }
 
     [Fact]
+    public void Monad_HasV1_0_0AndV1_1_0_WithV1_1_0AsLatest()
+    {
+        var versions = Constants.SmartWalletVersions[SupportedChainIds.MONAD];
+
+        Assert.Equal(versions[SmartWalletVersion.v1_1_0], versions[SmartWalletVersion.LATEST]);
+        Assert.Equal("0x000000005c84F8Fd50b21CAC312528A64437030e", versions[SmartWalletVersion.LATEST]);
+        Assert.Equal("0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00", versions[SmartWalletVersion.v1_0_0]);
+    }
+
+    [Fact]
     public void ModeToBytes32_MapsBothModes()
     {
         Assert.Equal(Constants.MODE_BATCHED_CALL, Constants.ModeToBytes32(ModeType.BATCHED_CALL));
