@@ -1,15 +1,28 @@
 version: 2
+
+# Security updates only.
+#
+# `open-pull-requests-limit: 0` turns off routine version-update PRs for an
+# ecosystem while leaving Dependabot *security* updates untouched — those are
+# controlled by the repository's "Dependabot security updates" setting and are
+# still raised against a published advisory. Dependency currency is instead
+# handled by periodic, test-verified sweeps (see CLAUDE.md → Outstanding work).
+#
+# To turn routine updates back on, restore the previous limits (nuget: 10,
+# github-actions: default) and set an interval.
 updates:
   - package-ecosystem: "nuget"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "build"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "ci"

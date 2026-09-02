@@ -10,7 +10,7 @@ the V3 periphery contracts.
 
 - Target framework: **.NET 10** (`net10.0`)
 - V3 core (entities + math) is implemented and unit-tested
-- 292 xUnit v3 tests; all passing (see Outstanding work)
+- 1695 xUnit v3 tests; all passing (see Outstanding work)
 - All calldata / action-builder stubs are now implemented and test-covered (no `NotImplementedException` left)
 - Not yet packaged or published to NuGet
 
@@ -41,9 +41,18 @@ dotnet test  -c Release
 
 The projects target `net10.0` and require the .NET 10 SDK; no `DOTNET_ROLL_FORWARD` is needed.
 
+Tests run on **Microsoft.Testing.Platform (MTP)**, not VSTest — xunit.v3 4.x dropped the VSTest
+bridge on the .NET 10 SDK. `global.json` opts `dotnet test` into the MTP runner; keep it. MTP
+reporting flags go after `--` and replace the VSTest ones (`--report-trx` for `--logger trx`,
+`--coverage --coverage-output-format cobertura` for `--collect:"XPlat Code Coverage"`).
+
 CI (`.github/workflows/ci.yml`, which calls the reusable `_test.yml`) restores, builds in
 Release, and runs the tests on ubuntu/windows/macos — publishing a PR test-result check, a
 coverage comment, and a `$GITHUB_STEP_SUMMARY` table. CodeQL runs via `codeql.yml`.
+
+Dependabot is **security-updates only** (`.github/dependabot.yml` sets
+`open-pull-requests-limit: 0`). Routine currency is handled by periodic, test-verified sweeps
+rather than a stream of individual bump PRs.
 
 ## Dependencies
 
@@ -51,7 +60,11 @@ coverage comment, and a `$GITHUB_STEP_SUMMARY` table. CodeQL runs via `codeql.ym
   contract calls, address / keccak utilities. An explicit `Newtonsoft.Json` 13.0.4 pin overrides
   the vulnerable 11.0.2 that `Nethereum.Hex` still drags in transitively (NU1903).
 - **ExtendedNumerics.BigRational** 3000.0.2.132 - exact rational arithmetic for the fraction and price types
-- **xUnit v3** + **AwesomeAssertions** (test project only)
+- **BouncyCastle.Cryptography** 2.7.0 - Ed25519 (EdDSA) for the tamperproof-transactions port;
+  `System.Security.Cryptography` has no managed Ed25519 on `net10.0`
+- **xunit.v3** 4.0.0 + **AwesomeAssertions** 9.6.0, on Microsoft.Testing.Platform:
+  `Microsoft.Testing.Extensions.TrxReport` + `.CodeCoverage` replace the old
+  `coverlet.collector` / VSTest data collectors (test project only)
 
 ## Porting methodology
 
@@ -116,6 +129,16 @@ place. Remaining work is **Phase B** (V3 feature-parity port) and beyond.
    - **CI:** `actions/setup-dotnet` → `v5.4.0` (node24) across all workflows to clear the Node-20
      deprecation, stale `# v4`/`# v2`/`# v3` action version comments corrected, and `codeql-action/analyze`
      aligned to `init` at v4.37.0 (#26).
+
+   **Second pass (2026-09) — DONE.** The 12 Dependabot PRs that had accumulated since were landed as
+   one verified sweep behind a green 1695-test suite: `xunit.v3` `3.2.2` → `4.0.0`,
+   `xunit.runner.visualstudio` `3.1.5` → `4.0.0`, `Microsoft.NET.Test.Sdk` `18.7.0` → `18.9.0`,
+   `AwesomeAssertions` `9.4.0` → `9.6.0`, `BouncyCastle.Cryptography` `2.5.1` → `2.7.0`,
+   `MinVer` `6.0.0` → `7.0.0`, `Microsoft.SourceLink.GitHub` `8.0.0` → `10.0.400`, plus the five
+   action pins. The `xunit.v3` major forced the **VSTest → Microsoft.Testing.Platform** migration
+   (`global.json`, MTP reporting flags in `_test.yml`, `coverlet.collector` replaced by
+   `Microsoft.Testing.Extensions.CodeCoverage` + `.TrxReport`). Dependabot was switched to
+   security-updates-only at the same time.
 2. **Seven `NotImplementedException` stubs** - DONE. All ported test-first (upstream `.test.ts`
    cases, calldata matched to the digit): `PositionLibrary.SubIn256` (#32), `PriceTick` (#34),
    `Payments` (#35), `SwapQuoter` (#36), and `NonfungiblePositionManager` (create/add #39,

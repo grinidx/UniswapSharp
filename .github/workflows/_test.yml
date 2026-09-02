@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
 
@@ -36,17 +36,20 @@ jobs:
         if: runner.os == 'Linux'
         run: dotnet format UniswapSharp.sln --verify-no-changes
 
+      # xunit.v3 4.x runs on Microsoft.Testing.Platform (see global.json), so the reporting
+      # flags are MTP's and go after `--`, not VSTest's --logger / --collect.
       - name: Test
         run: >
-          dotnet test -c Release --no-build
-          --logger "trx;LogFileName=test-results.trx"
+          dotnet test -c Release --no-build --
+          --report-trx --report-trx-filename test-results.trx
           --results-directory ${{ github.workspace }}/TestResults
-          --collect:"XPlat Code Coverage"
+          --coverage --coverage-output-format cobertura
+          --coverage-output coverage.cobertura.xml
 
       # --- Reporting (single OS leg to avoid duplicate comments) ---
       - name: Publish test results
         if: always() && runner.os == 'Linux'
-        uses: EnricoMi/publish-unit-test-result-action@82082dac68ad6a19d980f8ce817e108b9f496c2a # v2.17.1
+        uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
         with:
           check_name: "Test Results"
           files: "${{ github.workspace }}/TestResults/**/*.trx"

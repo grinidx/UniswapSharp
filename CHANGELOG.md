@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+- Dependency sweep, verified behind a green 1,695-test suite: `xunit.v3` 3.2.2 → 4.0.0,
+  `xunit.runner.visualstudio` 3.1.5 → 4.0.0, `Microsoft.NET.Test.Sdk` 18.7.0 → 18.9.0,
+  `AwesomeAssertions` 9.4.0 → 9.6.0, `BouncyCastle.Cryptography` 2.5.1 → 2.7.0,
+  `MinVer` 6.0.0 → 7.0.0, `Microsoft.SourceLink.GitHub` 8.0.0 → 10.0.400, and the
+  `setup-dotnet`, `codeql-action`, `publish-unit-test-result-action` and `action-gh-release`
+  pins. No library API or protocol-math change.
+- Tests now run on **Microsoft.Testing.Platform** instead of VSTest. `xunit.v3` 4.x drops the
+  VSTest bridge on the .NET 10 SDK, so `global.json` selects the MTP runner and CI uses MTP's
+  reporting flags. `coverlet.collector` is replaced by `Microsoft.Testing.Extensions.CodeCoverage`
+  and `.TrxReport`; the TRX check and Cobertura coverage report are unchanged.
+- Dependabot is now security-updates only; routine currency is handled by verified sweeps.
+
 ## [1.0.0] - 2026-07-13
 
 First stable release — the full [`Uniswap/sdks`](https://github.com/Uniswap/sdks) monorepo surface
