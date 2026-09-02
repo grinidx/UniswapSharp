@@ -13,6 +13,7 @@ public enum SupportedChainId
     AVALANCHE = 43114,
     XLAYER = 196,
     ROBINHOOD = 4663,
+    ARC = 5042,
     SEPOLIA = 11155111,
     BASE_SEPOLIA = 84532,
 }

@@ -19,6 +19,16 @@ public record CustomRangeInput(double MinPercentFromClearing, double MaxPercentF
 /// </summary>
 public static class Positions
 {
+    /// <summary>
+    /// Parses a hex address as an unsigned integer for v4 currency ordering. The leading "0" keeps
+    /// <see cref="BigInteger.Parse(string, System.Globalization.NumberStyles)"/> from reading a
+    /// high top nibble as a negative sign.
+    /// </summary>
+    private static BigInteger ParseAddress(string address) =>
+        BigInteger.Parse(
+            "0" + (address.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? address[2..] : address),
+            System.Globalization.NumberStyles.HexNumber);
+
     private static int SnapDown(int tick, int tickSpacing) =>
         (int)Math.Floor((double)tick / tickSpacing) * tickSpacing;
 
@@ -56,14 +66,26 @@ public static class Positions
         new(TickMath.MIN_TICK, TickMath.MAX_TICK, Constants.MPS_TOTAL, Constants.ZERO_ADDRESS);
 
     /// <summary>Builds the LP <c>PositionDefinition[]</c> for a price-range strategy.</summary>
+    /// <remarks>
+    /// <paramref name="currency"/> / <paramref name="token"/> (the raised currency and the launched
+    /// token) determine v4 currency ordering. When <paramref name="currency"/> sorts as
+    /// <c>currency0</c> the custom offsets are mirrored onto the reciprocal price band. Native ETH is
+    /// <c>ZERO_ADDRESS</c>, which always sorts as <c>currency0</c>.
+    /// </remarks>
     public static IReadOnlyList<PositionDefinition> BuildPositionDefinitions(
-        PriceRangeKind strategy, IReadOnlyList<CustomRangeInput> customRanges, int tickSpacing)
+        PriceRangeKind strategy, IReadOnlyList<CustomRangeInput> customRanges, int tickSpacing,
+        string currency, string token)
     {
         if (strategy != PriceRangeKind.CUSTOM_RANGE)
         {
             // Concentrated-full-range and full-range both resolve to a single full-range position for v1.
+            // The full-range sentinel is mirror-invariant, so ordering does not affect it.
             return new[] { FullRangeDefinition() };
         }
+
+        // Matches the contract's `currency < token` (LBPStrategy) ordering; ZERO_ADDRESS (native) is
+        // always currency0.
+        bool currencyIsCurrency0 = ParseAddress(currency) < ParseAddress(token);
         if (customRanges.Count == 0)
         {
             throw new LauncherSdkError(
@@ -96,6 +118,13 @@ public static class Positions
             // past MAX_TICK / below MIN_TICK, which reverts on-chain as an invalid tick.
             int offsetLower = Math.Max(SnapDown(rawLower, tickSpacing), TickMath.MIN_TICK);
             int offsetUpper = Math.Min(SnapUp(rawUpper, tickSpacing), TickMath.MAX_TICK);
+            // When currency is currency0 the pool price is the reciprocal of currency-per-token, so
+            // mirror the range onto the reciprocal band. Negate-and-swap keeps the values tick-aligned
+            // and in range (MIN_TICK == -MAX_TICK), and preserves upper > lower.
+            if (currencyIsCurrency0)
+            {
+                (offsetLower, offsetUpper) = (-offsetUpper, -offsetLower);
+            }
             if (offsetUpper <= offsetLower)
             {
                 throw new LauncherSdkError(

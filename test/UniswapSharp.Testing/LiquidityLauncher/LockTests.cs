@@ -57,15 +57,22 @@ public class LockTests
         Assert.Matches(new Regex("^0x[0-9a-fA-F]{40}$"), @out.PredictedAddress);
     }
 
-    // Pins the audited creation bytecode so an accidental recompile/version bump fails loudly.
+    // Edit-guard only: these pins catch an accidental local edit of the committed bytecode.
+    // They do NOT detect drift from the upstream contracts — only regenerating from the
+    // liquidity-launcher repo picks up upstream changes.
 
     [Fact]
     public void CreationBytecodePins_TimelockBytecodeHashIsUnchanged() =>
-        Assert.Equal("0x2191c5153dfbfe1eff2d9e1140ea84188b935273eb299c3afbc4f9a82ce8203c",
+        Assert.Equal("0x86ae215e4056c6fda23e5572f4b20f3f22ca2f6922133c95ad0ce0e8bced7555",
             Keccak(LockRecipientBytecode.TIMELOCK));
 
     [Fact]
     public void CreationBytecodePins_FeesForwarderBytecodeHashIsUnchanged() =>
-        Assert.Equal("0x507a9a1b056e76a6d3fa727c9cd50aeae62665594832e50dc977e1864de9e539",
+        Assert.Equal("0xeae154385d89ee8293b868cadce468df4b64c33995c1340284d1b7dd82267013",
             Keccak(LockRecipientBytecode.FEES_FORWARDER));
+
+    [Fact]
+    public void CreationBytecodePins_BuybackBurnBytecodeHashIsUnchanged() =>
+        Assert.Equal("0x591c41e1cb988ea96f8bd7ea36b649dd12536119e9c8a706b5d062ddd8c0fc1f",
+            Keccak(LockRecipientBytecode.BUYBACK_BURN));
 }
