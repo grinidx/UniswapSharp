@@ -333,6 +333,55 @@ public class MixedRouteTests
     private static readonly V2Pair mp_pair_0_weth = Pair(token0, 100, weth, 100);
     private static readonly V2Pair mp_pair_1_weth = Pair(token1, 175, weth, 100);
 
+    // ---- #midPrice across native/wrapped boundaries (upstream ROUTE-886) ----
+    private static readonly Token tokenHigh = new(1, "0xffffffffffffffffffffffffffffffffffffffff", 18, "th");
+    private static readonly V4Pool mp_v4_1_eth_ratio =
+        new(token1, ETHER, (int)FeeAmount.MEDIUM, 60, ZERO, S(1, 4), 0, TickMath.GetTickAtSqrtRatio(S(1, 4)), NoTicks());
+    private static readonly V2Pair mp_pair_weth_high = Pair(weth, 100, tokenHigh, 300);
+
+    // Genuine (non-fake) ETH/WETH v4 pool with an asymmetric price: both sides wrap to WETH,
+    // so only the exact-equality checks can pick the right side.
+    private static readonly V4Pool mp_v4_eth_weth_genuine =
+        new(ETHER, weth, (int)FeeAmount.MEDIUM, 60, ZERO, S(1, 2), 0, TickMath.GetTickAtSqrtRatio(S(1, 2)), NoTicks());
+
+    [Fact]
+    public void MidPrice_BridgesWethToNativeEther_BetweenV2PairAndV4Pool()
+    {
+        var route = Route(new object[] { mp_pair_0_weth, mp_v4_1_eth_ratio }, token0, token1);
+        Assert.Equal("0.2500", route.MidPrice.ToFixed(4));
+    }
+
+    [Fact]
+    public void MidPrice_BridgesNativeEtherToWeth_BetweenV4PoolAndV2Pair()
+    {
+        var route = Route(new object[] { mp_v4_1_eth_ratio, mp_pair_weth_high }, token1, tokenHigh);
+        Assert.Equal("12.0000", route.MidPrice.ToFixed(4));
+    }
+
+    [Fact]
+    public void MidPrice_PrefersExactCurrencyMatch_WhenGenuineEthWethPoolReceivesWeth()
+    {
+        // pool token0Price (WETH per ETH) = 0.5, token1Price (ETH per WETH) = 2.
+        // WETH must match token1 exactly; matching by wrapped equivalence alone picks token0 and inverts.
+        var route = Route(new object[] { mp_pair_0_weth, mp_v4_eth_weth_genuine }, token0, ETHER);
+        Assert.Equal("2.0000", route.MidPrice.ToFixed(4));
+    }
+
+    [Fact]
+    public void MidPrice_PricesGenuineEthWethPoolAtRouteStart_WhenRouteBeginsWithWeth()
+    {
+        var route = Route(new object[] { mp_v4_eth_weth_genuine, mp_pair_0_weth }, weth, token0);
+        Assert.Equal("2.0000", route.MidPrice.ToFixed(4));
+    }
+
+    [Fact]
+    public void MidPrice_PricesGenuineEthWethPoolAtRouteStart_WhenRouteBeginsWithNativeEther()
+    {
+        // pool token0Price (WETH per ETH) = 0.5, then mp_pair_weth_high 300/100 = 3.
+        var route = Route(new object[] { mp_v4_eth_weth_genuine, mp_pair_weth_high }, ETHER, tokenHigh);
+        Assert.Equal("1.5000", route.MidPrice.ToFixed(4));
+    }
+
     [Fact]
     public void MidPrice_V3_0to1()
     {

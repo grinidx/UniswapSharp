@@ -134,16 +134,19 @@ public class MixedRouteSDK<TInput, TOutput>
                 return _midPrice;
             }
 
-            var start = TPool.Token0(Pools[0]).Equals(PathInput)
-                ? (NextInput: TPool.Token1(Pools[0]), Price: TPool.Token0Price(Pools[0]).AsFraction())
-                : (NextInput: TPool.Token0(Pools[0]), Price: TPool.Token1Price(Pools[0]).AsFraction());
+            // Path[i + 1] is always pool i's own currency object (the constructor pushes the pool's
+            // currency even when bridging a native/wrapped boundary), so exact equality is enough to
+            // orient each pool's price along the already-resolved path. Tracking the next input by
+            // token identity instead — as this did before — inverted the price wherever the route
+            // crossed a native/wrapped boundary, because neither of the pool's tokens compared equal
+            // to the carried input.
+            var price = Pools
+                .Select((pool, i) => Path[i + 1].Equals(TPool.Token1(pool))
+                    ? TPool.Token0Price(pool).AsFraction()
+                    : TPool.Token1Price(pool).AsFraction())
+                .Aggregate(new Fraction(1), (acc, poolPrice) => acc.Multiply(poolPrice));
 
-            var result = Pools.Skip(1).Aggregate(start, (acc, pool) =>
-                acc.NextInput.Equals(TPool.Token0(pool))
-                    ? (NextInput: TPool.Token1(pool), Price: acc.Price.Multiply(TPool.Token0Price(pool).AsFraction()))
-                    : (NextInput: TPool.Token0(pool), Price: acc.Price.Multiply(TPool.Token1Price(pool).AsFraction())));
-
-            _midPrice = new Price<TInput, TOutput>(Input, Output, result.Price.Denominator, result.Price.Numerator);
+            _midPrice = new Price<TInput, TOutput>(Input, Output, price.Denominator, price.Numerator);
             return _midPrice;
         }
     }
