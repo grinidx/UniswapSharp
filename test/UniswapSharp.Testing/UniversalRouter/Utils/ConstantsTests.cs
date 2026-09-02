@@ -130,4 +130,21 @@ public class ConstantsTests
     {
         Assert.Equal("0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73", Constants.WETH_ADDRESS(4663));
     }
+
+    // Upstream #658 redeployed the sepolia routers and moved mainnet V2_2_0.
+    [Fact]
+    public void UniversalRouterAddress_ReturnsCurrentMainnetV2_2_0()
+    {
+        Assert.Equal("0x0542093271A31f6FC1DADB232bd59eeb27de780F",
+            Constants.UNIVERSAL_ROUTER_ADDRESS(UniversalRouterVersion.V2_2_0, 1));
+    }
+
+    [Fact]
+    public void UniversalRouterAddress_ReturnsCurrentSepoliaRouters()
+    {
+        Assert.Equal("0x7DfD4F31be6814D2906BDE155c3e1B146EAc1468",
+            Constants.UNIVERSAL_ROUTER_ADDRESS(UniversalRouterVersion.V2_1_1, 11155111));
+        Assert.Equal("0x54C707Df83f03bc9cA64ED2CcF9C99B63FD854b7",
+            Constants.UNIVERSAL_ROUTER_ADDRESS(UniversalRouterVersion.V2_2_0, 11155111));
+    }
 }

@@ -11,10 +11,11 @@ public class ConstantsTests
     private const string CanonicalQuoter = "0x00000000a3db63Df9078cBF3dF88B4CAdD5a7F58";
     private const string Zero = "0x0000000000000000000000000000000000000000";
 
-    // DutchV3 rollout to Robinhood (4663) and Arc (5042).
+    // DutchV3 rollout to Robinhood (4663), Arc (5042) and Ink (57073).
     [Theory]
     [InlineData(4663, "0x000000007A1C8e570011EeDF86A2A35593013cBA")]
     [InlineData(5042, "0x0000000015134054eA82AE0bb9fda66b36402C36")]
+    [InlineData(57073, "0x000000007A1C8e570011EeDF86A2A35593013cBA")]
     public void DutchV3Rollout_GetReactorResolvesDeployedReactor(int chainId, string reactor)
     {
         OrderUtils.GetReactor(chainId, OrderType.Dutch_V3).ToLowerInvariant()
@@ -24,6 +25,7 @@ public class ConstantsTests
     [Theory]
     [InlineData(4663)]
     [InlineData(5042)]
+    [InlineData(57073)]
     public void DutchV3Rollout_MapsToCanonicalOrderQuoter(int chainId)
     {
         Constants.UniswapxOrderQuoterMapping[chainId].ToLowerInvariant()
@@ -33,6 +35,7 @@ public class ConstantsTests
     [Theory]
     [InlineData(4663)]
     [InlineData(5042)]
+    [InlineData(57073)]
     public void DutchV3Rollout_MapsToCanonicalPermit2(int chainId)
     {
         Constants.Permit2Mapping[chainId].ToLowerInvariant()
@@ -42,6 +45,7 @@ public class ConstantsTests
     [Theory]
     [InlineData(4663)]
     [InlineData(5042)]
+    [InlineData(57073)]
     public void DutchV3Rollout_UsesZeroAddressForExclusiveFillerValidation(int chainId)
     {
         Constants.ExclusiveFillerValidationMapping[chainId].Should().Be(Zero);
@@ -68,5 +72,6 @@ public class ConstantsTests
         m[42161][OrderType.Dutch_V3].Should().Be("0xB274d5F4b833b61B340b654d600A864fB604a87c");
         m[4663][OrderType.Dutch_V3].Should().Be("0x000000007A1C8e570011EeDF86A2A35593013cBA");
         m[5042][OrderType.Dutch_V3].Should().Be("0x0000000015134054eA82AE0bb9fda66b36402C36");
+        m[57073][OrderType.Dutch_V3].Should().Be("0x000000007A1C8e570011EeDF86A2A35593013cBA");
     }
 }

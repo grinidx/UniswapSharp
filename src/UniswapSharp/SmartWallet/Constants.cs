@@ -35,6 +35,7 @@ public enum SupportedChainIds
     XLAYER = (int)ChainId.XLAYER,
     ARC = (int)ChainId.ARC,
     ROBINHOOD = (int)ChainId.ROBINHOOD,
+    MONAD = (int)ChainId.MONAD,
 }
 
 /// <summary>
@@ -110,6 +111,7 @@ public static class Constants
             [SupportedChainIds.XLAYER] = WithoutStaging(),
             [SupportedChainIds.ARC] = WithoutStaging(),
             [SupportedChainIds.ROBINHOOD] = WithoutStaging(),
+            [SupportedChainIds.MONAD] = WithoutStaging(),
         };
 
     /// <summary>
