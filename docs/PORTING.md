@@ -148,7 +148,7 @@ Five dependency-ordered PRs, per [`docs/design/2026-09-02-upstream-parity-design
 The pinned commit in §1 stays at `6081b3e` until the last one lands.
 
 - [x] PR 1 — `Core` address + chain registry (sepolia TickLens, permissioned V4 + hooks, Arc block time)
-- [ ] PR 2 — small independent fixes (`Router` midPrice, `UniswapX` batch ordering, `SmartWallet` Monad, UR sepolia address)
+- [x] PR 2 — small independent fixes (`Router` midPrice + partition, `UniswapX` Ink, `SmartWallet` Monad, UR sepolia address). UniswapX #685/#686 excluded: `multicall.ts`/`OrderQuoter.ts` were never ported, so they are new surface rather than a re-sync — see §14.
 - [ ] PR 3 — `UniversalRouter` encoding (V4 exact-out TAKE floor, ACROSS tuple, direct transfers)
 - [ ] PR 4 — `LiquidityLauncher` registry + config (incl. the breaking `BuildPositionDefinitions` signature)
 - [ ] PR 5 — `LiquidityLauncher` launch surface; bump the §1 pin to `35c4e35`
@@ -433,6 +433,18 @@ tuple/`bytes` encoding reuses `V4/Utils/AbiParamEncoder`.
   providers/contracts and have no deterministic vectors; **intentionally deferred** (live-verification later).
   The small deterministic `ResolvedUniswapXOrder`/`ResolvedRelayOrder` shapes that `order.resolve()` returns
   were lifted from `OrderQuoter.ts` into `Order/Types.cs`.
+
+  **Update (upstream `35c4e35`):** this reasoning no longer fully holds for `utils/multicall.ts`. Upstream
+  #685 fixed `quoteBatch`/`validateBatch` returning results out of the caller's order — orders carrying a
+  block override must be dispatched on their own, and the results were not scattered back to their input
+  positions — and shipped `utils/multicall.test.ts`, 227 lines driven by a **mocked** provider. So there are
+  now deterministic vectors for `multicallOrdersPreservingOrder`. #686 also renamed
+  `multicallSameContractManyFunctions` → `...ManyCalls` (old name kept as a deprecated alias).
+
+  Neither is a parity gap we can close by editing existing code: the baseline module was never ported, so
+  taking these means porting `multicall.ts` (deployless multicall, Multicall2 ABI, state/block overrides)
+  and the `OrderQuoter`/`OrderValidator` that sit on it. That is new surface, not a re-sync, and it is
+  **not** part of the `6081b3e` → `35c4e35` sweep. Tracked as follow-up work.
 - **DCA-intent hashing** in `order/v4/hashing.ts` (`hashDCAIntent`, `hashPrivateIntent`, `hashDCACosignerData`,
   `hashOutputAllocation(s)`, `hashFeedInfo(Array)`, `DCA_INTENT_TYPES`) — there is no DCA order class or
   `.test.ts`, so these are **deferred**. The hybrid-order hashing and the re-exported `ORDER_INFO_V4_TYPE_HASH`
