@@ -166,6 +166,14 @@ public static class Encode
     public static string EncodeTokenData(Uerc20Metadata metadata) =>
         AbiParamEncoder.Encode(new[] { UERC20_METADATA_TYPE }, new object?[] { Uerc20MetadataValue(metadata) });
 
+    /// <summary>
+    /// <c>abi.encode(InstantLaunchConfig)</c> — the InstantLaunchStrategy's <c>configData</c>.
+    /// </summary>
+    public static string EncodeInstantLaunchConfig(string feeBeneficiary) =>
+        AbiParamEncoder.Encode(
+            new[] { "(address feeBeneficiary)" },
+            new object?[] { new object?[] { feeBeneficiary } });
+
     public static string EncodeSuperchainTokenData(BigInteger homeChainId, string creator, Uerc20Metadata metadata) =>
         AbiParamEncoder.Encode(
             new[] { "uint256", "address", UERC20_METADATA_TYPE },

@@ -6,7 +6,53 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-### Changed
+### Upstream parity sweep — `6081b3e` → `35c4e35` (2026-09-01)
+
+Brings the port up to upstream `Uniswap/sdks@35c4e35`, 54 commits on from the previous pin.
+
+#### Fixed
+- **`Router`** — `MixedRouteSDK.MidPrice` returned an **inverted** price across native/wrapped
+  boundaries (upstream #706, ROUTE-886). `PartitionMixedRouteByProtocol` also failed to end a
+  section at such a boundary, and `GetOutputOfPools` picked the wrong side of a genuine ETH/WETH
+  pool.
+- **`UniversalRouter`** — `ACROSS_V4_DEPOSIT_V3` was encoded as a flat 13-value parameter list
+  instead of the single offset-prefixed tuple `ChainedActions.sol` decodes, so **every Across
+  bridge deposit this SDK produced was undecodable on-chain** (#690). V4 exact-output legs took
+  output with the `OPEN_DELTA` sentinel, silently forwarding an under-delivered partial fill
+  instead of reverting (#640, ROUTE-1394).
+- **`Core`** — sepolia `TickLensAddress` held the multicall address (#654). Arc's average block
+  time corrected to 0.5s.
+
+#### Changed
+- **BREAKING — `LiquidityLauncher.Config.Positions.BuildPositionDefinitions`** now requires the
+  raised `currency` and launched `token` addresses so it can apply v4 currency ordering (#651).
+  When `currency` sorts as `currency0` — always so for native-ETH launches — custom asymmetric
+  ranges are mirrored onto the reciprocal price band instead of landing on the mirror image of the
+  intended band. **This changes output for existing callers passing custom asymmetric ranges**;
+  the new values are correct, but they are different values. Full-range positions are unaffected.
+- **BREAKING — `LiquidityLauncher.Config.Fees.FeeToTickSpacing`** is superseded by
+  `ResolveNewPoolTickSpacing`, now `max(round(fee / 100), 1)` and no longer consulting the v3
+  `TICK_SPACINGS` table (#699). Fee 2500 → 25 (was 1), 3000 → 30 (was 60), 10000 → 100 (was 200).
+  The old name remains as an `[Obsolete]` alias.
+
+#### Added
+- **`UniversalRouter.DirectTransfers`** — opt-in direct transfers on swap steps (#638). Steps may
+  pull input straight from the user and pay output straight to the recipient, bounded so the user
+  never pays more than `exactOrMaxAmountIn` or receives less than the minimum output. Off by
+  default; the default regime encodes byte-identically to before.
+- **`LiquidityLauncher.QuickLaunch`** — the canonical quick-launch preset and pure, address-free
+  matcher (#643, #664, #673, #680).
+- **`LiquidityLauncher.InstantLaunch`** — deployment registry, preset, pool key/id derivation and
+  transaction assembler (#660, #663, #672, #678, #680, #718).
+- **`LiquidityLauncher.InstantLaunchFees`** — creator-fee accumulation, claimable and compounded
+  math over indexed events (#666, #670).
+- Chain and address registry updates: Arc (5042) across the launcher stack, Ink (57073) for the
+  UniswapX DutchV3 rollout, Monad for SmartWallet, `PermissionedV4HooksAddress` in `Core`, and
+  redeployed universal-router and LBPStrategy addresses.
+
+### Dependency sweep and test-platform migration
+
+#### Changed
 - Dependency sweep, verified behind a green 1,695-test suite: `xunit.v3` 3.2.2 → 4.0.0,
   `xunit.runner.visualstudio` 3.1.5 → 4.0.0, `Microsoft.NET.Test.Sdk` 18.7.0 → 18.9.0,
   `AwesomeAssertions` 9.4.0 → 9.6.0, `BouncyCastle.Cryptography` 2.5.1 → 2.7.0,
