@@ -10,9 +10,9 @@ the V3 periphery contracts.
 
 - Target framework: **.NET 10** (`net10.0`)
 - V3 core (entities + math) is implemented and unit-tested
-- 1900 xUnit v3 tests; all passing (see Outstanding work)
+- 1920 xUnit v3 tests; all passing (see Outstanding work)
 - All calldata / action-builder stubs are now implemented and test-covered (no `NotImplementedException` left)
-- Not yet packaged or published to NuGet
+- Published to NuGet as `UniswapSharp` (latest: **2.0.0**)
 
 ## Layout
 

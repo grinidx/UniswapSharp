@@ -6,11 +6,40 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-### Upstream parity sweep — `6081b3e` → `35c4e35` (2026-09-01)
+## [2.0.0] - 2026-09-03
 
-Brings the port up to upstream `Uniswap/sdks@35c4e35`, 54 commits on from the previous pin.
+Upstream parity release: the port is brought from `Uniswap/sdks@6081b3e` (2026-07-09) to
+`@35c4e35` (2026-09-01), 54 commits on. **Major because it clears four correctness bugs that
+change output**, one of them via a breaking signature change.
 
-#### Fixed
+Verified across the sweep to **1,920 xUnit tests, 0 failing** on Linux / Windows / macOS, with zero
+compiler warnings.
+
+### Migrating from 1.0.0
+
+Two call sites may need attention; nothing else in the public API moved.
+
+1. **`BuildPositionDefinitions` takes two more arguments.** Pass the raised `currency` and the
+   launched `token` so it can apply v4 currency ordering:
+
+   ```csharp
+   // 1.0.0
+   Positions.BuildPositionDefinitions(strategy, customRanges, tickSpacing);
+
+   // 2.0.0
+   Positions.BuildPositionDefinitions(strategy, customRanges, tickSpacing, currency, token);
+   ```
+
+   If you pass **custom asymmetric ranges**, the resulting offsets change — they are now mirrored
+   onto the reciprocal price band when `currency` sorts as `currency0` (always so for native-ETH
+   launches). Full-range and tick-symmetric ranges are unaffected.
+
+2. **`FeeToTickSpacing` is `[Obsolete]`** in favour of `ResolveNewPoolTickSpacing`. The name change
+   is mechanical, but **the values changed**: fee 2500 now resolves to 25 (was 1), 3000 to 30
+   (was 60), 10000 to 100 (was 200). Use it only to choose the spacing of a pool you are about to
+   open — never to reconstruct the key of a pool that already exists.
+
+### Fixed
 - **`Router`** — `MixedRouteSDK.MidPrice` returned an **inverted** price across native/wrapped
   boundaries (upstream #706, ROUTE-886). `PartitionMixedRouteByProtocol` also failed to end a
   section at such a boundary, and `GetOutputOfPools` picked the wrong side of a genuine ETH/WETH
@@ -23,7 +52,7 @@ Brings the port up to upstream `Uniswap/sdks@35c4e35`, 54 commits on from the pr
 - **`Core`** — sepolia `TickLensAddress` held the multicall address (#654). Arc's average block
   time corrected to 0.5s.
 
-#### Changed
+### Changed
 - **BREAKING — `LiquidityLauncher.Config.Positions.BuildPositionDefinitions`** now requires the
   raised `currency` and launched `token` addresses so it can apply v4 currency ordering (#651).
   When `currency` sorts as `currency0` — always so for native-ETH launches — custom asymmetric
@@ -35,7 +64,7 @@ Brings the port up to upstream `Uniswap/sdks@35c4e35`, 54 commits on from the pr
   `TICK_SPACINGS` table (#699). Fee 2500 → 25 (was 1), 3000 → 30 (was 60), 10000 → 100 (was 200).
   The old name remains as an `[Obsolete]` alias.
 
-#### Added
+### Added
 - **`UniversalRouter.DirectTransfers`** — opt-in direct transfers on swap steps (#638). Steps may
   pull input straight from the user and pay output straight to the recipient, bounded so the user
   never pays more than `exactOrMaxAmountIn` or receives less than the minimum output. Off by
@@ -50,9 +79,7 @@ Brings the port up to upstream `Uniswap/sdks@35c4e35`, 54 commits on from the pr
   UniswapX DutchV3 rollout, Monad for SmartWallet, `PermissionedV4HooksAddress` in `Core`, and
   redeployed universal-router and LBPStrategy addresses.
 
-### Dependency sweep and test-platform migration
-
-#### Changed
+### Changed — dependencies and test platform
 - Dependency sweep, verified behind a green 1,695-test suite: `xunit.v3` 3.2.2 → 4.0.0,
   `xunit.runner.visualstudio` 3.1.5 → 4.0.0, `Microsoft.NET.Test.Sdk` 18.7.0 → 18.9.0,
   `AwesomeAssertions` 9.4.0 → 9.6.0, `BouncyCastle.Cryptography` 2.5.1 → 2.7.0,
@@ -136,5 +163,6 @@ Preceded by `1.0.0-rc.1` and `1.0.0-rc.2`, both published and smoke-tested from 
   (`contracts/**`) and Foundry Solidity suites are intentionally not ported. See
   [docs/PORTING.md](docs/PORTING.md) for the full list of skips and intentional divergences.
 
-[Unreleased]: https://github.com/grinidx/UniswapSharp/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/grinidx/UniswapSharp/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/grinidx/UniswapSharp/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/grinidx/UniswapSharp/releases/tag/v1.0.0
