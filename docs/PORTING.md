@@ -44,7 +44,7 @@
 | `staker.ts` | `Staker.cs` | Yes — `V3/StakerTests.cs` (8 cases) | ported |
 | `swapRouter.ts` | `SwapRouter.cs` | Yes — `V3/SwapRouterTests.cs` (12, single-trade) + `V3/SwapRouterMultiTests.cs` (24, multiple-trade + multiple-route) | ported |
 | `utils/calldata.ts` | `Utils/Utilities.cs` (`ToHex`) | Yes — `V3/Utils/ToHexTests.cs` (incl. sign-nibble regressions) | ported |
-| `utils/computePoolAddress.ts` | `Utils/ComputePoolAddress.cs` | Yes — `V3/Utils/ComputePoolAddressTests.cs` (2 cases; zkSync CREATE2 case omitted, path not yet ported) | ported |
+| `utils/computePoolAddress.ts` | `Utils/ComputePoolAddress.cs` | Yes — `V3/Utils/ComputePoolAddressTests.cs` (2 cases); the file's zkSync CREATE2 vector is pinned separately in `Core/Utils/ZksyncAddressComputerTests.cs` | ported |
 | `utils/encodeRouteToPath.ts` | `Utils/EncodeRouteToPath.cs` | Yes — `EncodeRouteToPathTests.cs` (12 cases) | ported |
 | `utils/encodeSqrtRatioX96.ts` | `Utils/EncodeSqrtRatioX96.cs` | Yes — `V3/Utils/EncodeSqrtRatioX96Tests.cs` (5 cases) | ported |
 | `utils/fullMath.ts` | `Utils/FullMath.cs` | Indirect — exercised via `SqrtPriceMath`/`SwapMath` call sites in `PoolTests.cs`/`TradeTests.cs` | ported |
@@ -268,6 +268,12 @@ calldata are matched to the upstream golden vectors byte-for-byte.
 - **`availability.ts`** — fee-tier availability check that composes `reads.ts` against a live client;
   no `.test.ts`, depends on `reads.ts`. Deferred with it. Its pure inputs (`PoolId.ComputeLbpPoolId`,
   `Addresses.GetLauncherAddresses`) are ported.
+- **`abis.ts` selector pins are ported** even though the ABI surface is not: `abis.test.ts` pins the
+  deployed chain-4663 launcher's dispatcher selectors, and the equivalent guard here is to pin the selector
+  each encoder emits (`EncodeTests.LauncherSignatures_PinTheDeployedDispatcherSelectors`). All four match —
+  `createToken` `0xdec14be1`, `distributeToken` `0xb6982b48`, `depositToken` `0x44599bc5`, `multicall`
+  `0xac9650d8`. Upstream's `distributeWithNative` has no encoder upstream either (it is ABI-only), so there
+  is nothing to pin for it.
 - **`abis.ts`** — raw ABI JSON blobs for the read surface. Not ported as a standalone surface; the SDK
   encodes calldata via canonical function selectors (`V3/Utils/AbiFunctionEncoder`) + `AbiParamEncoder`
   rather than the ethers/viem ABI-JSON path, so the read ABIs are unused here.
@@ -421,6 +427,7 @@ tuple/`bytes` encoding reuses `V4/Utils/AbiParamEncoder`.
 | `builder/OrderBuilder.ts` + `builder/{Dutch,Relay,V2Dutch,V3Dutch,Priority,Hybrid}OrderBuilder.ts` | `Builder/*.cs` | Yes — via `OrderUtilsTests.cs` (build→serialize→parse round-trips for all 6) | ported |
 | `trade/utils.ts` + `trade/{Dutch,V2Dutch,V3Dutch,Priority,Relay,Hybrid}OrderTrade.ts` | `Trade/*.cs` | Yes — `{Dutch,V2Dutch,V3Dutch,Priority,Relay}OrderTradeTests.cs` (33) | ported |
 | `utils/NonceManager.ts` (+ test) | `Utils/NonceManager.cs` (pure fns + injectable `INonceLookup`) | Yes — `NonceManagerTests.cs` (28) | ported |
+| `utils/multicall.ts` (+ test) — ordering half only | `Utils/Multicall.cs` (`MulticallOrdersPreservingOrderAsync` + injectable `IMulticallClient`) | Yes — `MulticallTests.cs` (15) | partial (see Skipped) |
 
 ### Skipped (uniswapx-sdk)
 - **`contracts/**`** (40+ TypeChain-generated bindings + `__factory` tree) — ethers codegen; **not ported**.
@@ -432,17 +439,21 @@ tuple/`bytes` encoding reuses `V4/Utils/AbiParamEncoder`.
   The small deterministic `ResolvedUniswapXOrder`/`ResolvedRelayOrder` shapes that `order.resolve()` returns
   were lifted from `OrderQuoter.ts` into `Order/Types.cs`.
 
-  **Update (upstream `35c4e35`):** this reasoning no longer fully holds for `utils/multicall.ts`. Upstream
-  #685 fixed `quoteBatch`/`validateBatch` returning results out of the caller's order — orders carrying a
-  block override must be dispatched on their own, and the results were not scattered back to their input
-  positions — and shipped `utils/multicall.test.ts`, 227 lines driven by a **mocked** provider. So there are
-  now deterministic vectors for `multicallOrdersPreservingOrder`. #686 also renamed
-  `multicallSameContractManyFunctions` → `...ManyCalls` (old name kept as a deprecated alias).
+  **Update (2026-09-03): the deterministic half of `utils/multicall.ts` is now ported** as
+  `UniswapX/Utils/Multicall.cs`. Upstream #685 fixed `quoteBatch`/`validateBatch` returning results out of
+  the caller's order — orders carrying a block override must be dispatched on their own, and the results
+  were not scattered back to their input positions — and shipped `utils/multicall.test.ts` driven by a
+  **mocked** provider, so the batching and ordering logic does have deterministic vectors.
 
-  Neither is a parity gap we can close by editing existing code: the baseline module was never ported, so
-  taking these means porting `multicall.ts` (deployless multicall, Multicall2 ABI, state/block overrides)
-  and the `OrderQuoter`/`OrderValidator` that sit on it. That is new surface, not a re-sync, and it is
-  **not** part of the `6081b3e` → `35c4e35` sweep. Tracked as follow-up work.
+  `Multicall.MulticallOrdersPreservingOrderAsync` carries that logic against an injectable
+  `IMulticallClient`, the same shape as `INonceLookup` / the flashtestations RPC interface: the SDK decides
+  *which* calls go in *which* batch and how results are scattered back; the transport is the caller's. All
+  11 ordering cases plus the four batching cases are ported (`UniswapX/MulticallTests.cs`).
+
+  Still **not** ported, and still for the original reason — no upstream `.test.ts`, needs a live provider:
+  the ethers/deployless transport itself (deployless multicall bytecode, Multicall2 TypeChain bindings) and
+  `OrderQuoter` / `OrderValidator` above it. #686's `multicallSameContractManyFunctions` → `...ManyCalls`
+  rename applies to that untransported surface, so there is no deprecated alias to carry here.
 - **DCA-intent hashing** in `order/v4/hashing.ts` (`hashDCAIntent`, `hashPrivateIntent`, `hashDCACosignerData`,
   `hashOutputAllocation(s)`, `hashFeedInfo(Array)`, `DCA_INTENT_TYPES`) — there is no DCA order class or
   `.test.ts`, so these are **deferred**. The hybrid-order hashing and the re-exported `ORDER_INFO_V4_TYPE_HASH`

@@ -31,4 +31,27 @@ public class EncodeTests
     [Fact]
     public void EncodeAuctionSteps_RejectsANonIncreasingStep() =>
         Assert.Throws<LauncherSdkError>(() => Encode.EncodeAuctionSteps(new[] { new AuctionStepInput(1, 5, 5) }));
+
+    // ---- launcher selector pins (ported from abis.test.ts) ----
+    //
+    // Selectors read off the deployed chain-4663 launcher's dispatcher (2026-08-04). Upstream pins
+    // them against its LIQUIDITY_LAUNCHER_ABI; this port has no ABI surface, so the equivalent guard
+    // is to pin the selector each encoder actually emits. That is the same regression these catch:
+    // a signature typo produces calldata the dispatcher rejects with empty data.
+    [Theory]
+    [InlineData("createToken(address,string,string,uint8,uint128,address,bytes)", "dec14be1")]
+    [InlineData("distributeToken(address,(address,uint128,bytes),bytes32)", "b6982b48")]
+    [InlineData("depositToken(address,uint160)", "44599bc5")]
+    [InlineData("multicall(bytes[])", "ac9650d8")]
+    public void LauncherSignatures_PinTheDeployedDispatcherSelectors(string signature, string selector) =>
+        Assert.Equal(selector, UniswapSharp.V3.Utils.AbiFunctionEncoder.Selector(signature));
+
+    [Fact]
+    public void EncodedLauncherCalldata_StartsWithThePinnedSelectors()
+    {
+        Assert.StartsWith("0x44599bc5",
+            Encode.EncodeDepositToken("0x0000000000000000000000000000000000000001", 1));
+
+        Assert.StartsWith("0xac9650d8", Encode.EncodeMulticall(new[] { "0x1234" }));
+    }
 }
